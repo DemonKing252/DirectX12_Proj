@@ -19,6 +19,38 @@ using namespace DirectX;
 
 #define MAX_LOADSTRING 100
 
+// step 10: define our vertices
+struct Vertex
+{
+    XMFLOAT3 Position;  // offset 0
+    XMFLOAT3 Color;     // offset 12
+    XMFLOAT2 UV;        // offset 24 (12 + 12)
+    XMFLOAT3 Normal;    // offset 32 (12 + 12 + 8)
+};
+
+struct Light
+{
+    XMFLOAT3 Position;
+    float FallOffStart;
+    XMFLOAT3 Direction;
+    float FallOffEnd;
+    XMFLOAT3 Strength;
+    int type;	// 1 for directional, 2 for point light, 3 for spot light
+};
+
+struct ConstantBuffer
+{
+    DirectX::XMMATRIX Model;
+    DirectX::XMMATRIX World;
+    Light directionalLight;
+    DirectX::XMFLOAT4 CameraPosition;
+};
+XMVECTOR eyePos;
+XMMATRIX view, model, proj, modelNormal;
+
+// Sun light
+ConstantBuffer cBuffer;
+
 // Global Variables:
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
@@ -43,6 +75,84 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
             __debugbreak();                                             \
         }                                                               \
     } while (0)
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_KEYDOWN:
+
+        XMFLOAT4 eyeP;
+        XMStoreFloat4(&eyeP, eyePos);
+
+        if (wParam == VK_ESCAPE)
+        {
+            PostQuitMessage(0);
+            return 0;
+        }
+        if (wParam == 'W')
+        {
+            eyeP.z += 0.1f;
+        }
+        if (wParam == 'S')
+        {
+            eyeP.z -= 0.1f;
+        }
+        if (wParam == 'A')
+        {
+            eyeP.x -= 0.1f;
+        }
+        if (wParam == 'D')
+        {
+            eyeP.x += 0.1f;
+        }
+        if (wParam == 'Q')
+        {
+            eyeP.y += 0.1f;
+        }
+        if (wParam == 'E')
+        {
+            eyeP.y -= 0.1f;
+        }
+
+        eyePos = XMLoadFloat4(&eyeP);
+        break;
+
+    case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        // Parse the menu selections:
+        switch (wmId)
+        {
+        case IDM_ABOUT:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+        case IDM_EXIT:
+            DestroyWindow(hWnd);
+            break;
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+    }
+    break;
+    case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd, &ps);
+        // TODO: Add any drawing code that uses hdc here...
+        EndPaint(hWnd, &ps);
+    }
+    break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+        break;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+    return 0;
+}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -83,7 +193,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ID3D12DescriptorHeap* rtvHeap;
     ID3D12Resource* rtvResources[3];
     
-
+    // optional but recommended: enable the debug layer
     ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
     debugController->EnableDebugLayer();
 
@@ -157,14 +267,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
     assert(IsWindow(hWnd));
 
-    // step 10: define our vertices
-    struct Vertex
-    {
-        XMFLOAT3 Position;
-        XMFLOAT3 Color;
-        XMFLOAT2 UV;
-        XMFLOAT3 Normal;
-    };
+    
 
     /*
         // vertex.x, vertex.y, color.r, color.g, color.b
@@ -176,19 +279,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     Vertex cube_verticies[] = {
 
         // vertex.x, vertex.y, color.r, color.g, color.b
-        /*0*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // top left
-        /*1*/XMFLOAT3({-0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // top right
-        /*2*/XMFLOAT3({+0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // bottom right
-        /*2*/XMFLOAT3({+0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // bottom right
-        /*3*/XMFLOAT3({+0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // bottom left
-        /*0*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // top left    --------------------------------------
+        /*0*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
+        /*1*/XMFLOAT3({-0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
+        /*2*/XMFLOAT3({+0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
+        /*2*/XMFLOAT3({+0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
+        /*3*/XMFLOAT3({+0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
+        /*0*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
 
-        /*0*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // top left --------------------------------------
-        /*2*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // bottom right
-        /*1*/XMFLOAT3({-0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // top right
-        /*2*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // bottom right
-        /*0*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // top left
-        /*3*/XMFLOAT3({+0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // bottom left --------------------------------------
+        /*0*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
+        /*2*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
+        /*1*/XMFLOAT3({-0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
+        /*2*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
+        /*0*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
+        /*3*/XMFLOAT3({+0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
 
 
         /*3*/XMFLOAT3({-0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left--------------------------------------
@@ -230,46 +333,91 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         ///*7*/XMFLOAT3({+0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), // bottom left
 
     };
+
+    /*
+    Vertex cube_verticies[] = {
+
+        // vertex.x, vertex.y, color.r, color.g, color.b
+    XMFLOAT3({ -0.5f, -0.5f, -0.5f }), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // top left
+    XMFLOAT3({ -0.5f, +0.5f, -0.5f }), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // top right
+    XMFLOAT3({ +0.5f, +0.5f, -0.5f }), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // bottom right
+    XMFLOAT3({ +0.5f, +0.5f, -0.5f }), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // bottom right
+    XMFLOAT3({ +0.5f, -0.5f, -0.5f }), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // bottom left
+    XMFLOAT3({ -0.5f, -0.5f, -0.5f }), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // top left    --------------------------------------
+
+    XMFLOAT3({ -0.5f, -0.5f, +0.5f }), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // top left --------------------------------------
+    XMFLOAT3({ +0.5f, +0.5f, +0.5f }), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // bottom right
+    XMFLOAT3({ -0.5f, +0.5f, +0.5f }), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // top right
+    XMFLOAT3({ +0.5f, +0.5f, +0.5f }), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // bottom right
+    XMFLOAT3({ -0.5f, -0.5f, +0.5f }), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // top left
+    XMFLOAT3({ +0.5f, -0.5f, +0.5f }), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // bottom left --------------------------------------
+
+
+    XMFLOAT3({ -0.5f, +0.5f, -0.5f }), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left--------------------------------------
+    XMFLOAT3({ -0.5f, +0.5f, +0.5f }), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left
+    XMFLOAT3({ +0.5f, +0.5f, +0.5f }), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left
+    XMFLOAT3({ +0.5f, +0.5f, +0.5f }), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left
+    XMFLOAT3({ +0.5f, +0.5f, -0.5f }), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left
+    XMFLOAT3({ -0.5f, +0.5f, -0.5f }), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left--------------------------------------
+
+
+    XMFLOAT3({ -0.5f, -0.5f, -0.5f }), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left--------------------------------------
+    XMFLOAT3({ +0.5f, -0.5f, -0.5f }), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left
+    XMFLOAT3({ +0.5f, -0.5f, +0.5f }), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left
+    XMFLOAT3({ +0.5f, -0.5f, +0.5f }), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left
+    XMFLOAT3({ -0.5f, -0.5f, +0.5f }), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left
+    XMFLOAT3({ -0.5f, -0.5f, -0.5f }), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left--------------------------------------
+
+
+    XMFLOAT3({ +0.5f, -0.5f, -0.5f }), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left--------------------------------------
+    XMFLOAT3({ +0.5f, +0.5f, -0.5f }), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
+    XMFLOAT3({ +0.5f, +0.5f, +0.5f }), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
+    XMFLOAT3({ +0.5f, +0.5f, +0.5f }), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
+    XMFLOAT3({ +0.5f, -0.5f, +0.5f }), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
+    XMFLOAT3({ +0.5f, -0.5f, -0.5f }), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left--------------------------------------
+
+    XMFLOAT3({ -0.5f, -0.5f, -0.5f }), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left--------------------------------------
+    XMFLOAT3({ -0.5f, -0.5f, +0.5f }), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
+    XMFLOAT3({ -0.5f, +0.5f, +0.5f }), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
+    XMFLOAT3({ -0.5f, +0.5f, +0.5f }), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
+    XMFLOAT3({ -0.5f, +0.5f, -0.5f }), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
+    XMFLOAT3({ -0.5f, -0.5f, -0.5f }), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
+
+    */
+
+
+
+    ///*4*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), // top left
+    ///*5*/XMFLOAT3({-0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), // top right
+    ///*6*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), // bottom right
+    ///*7*/XMFLOAT3({+0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), // bottom left
+
+    
     
 
     Vertex quad_verticies[] = {
         { XMFLOAT3(-0.5f, 0.0f, -0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-        { XMFLOAT3(-0.5f, 0.0f, +0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f), XMFLOAT2(5.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-        { XMFLOAT3(+0.5f, 0.0f, +0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(5.0f, 6.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-        { XMFLOAT3(+0.5f, 0.0f, -0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 6.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+        { XMFLOAT3(-0.5f, 0.0f, +0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f), XMFLOAT2(7.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+        { XMFLOAT3(+0.5f, 0.0f, +0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(7.0f, 7.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+        { XMFLOAT3(+0.5f, 0.0f, -0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 7.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
     };
     UINT16 quad_indicies[] = {
         0, 1, 2,
         2, 3, 0
     };
 
-    struct Light
-    {
-        XMFLOAT3 Direction;
-        float pad1;
-        XMFLOAT3 Strength;
-        float pad2;
-    };
-
-    struct ConstantBuffer
-    {
-        DirectX::XMMATRIX Model;
-        DirectX::XMMATRIX World;
-        Light directionalLight;
-    };
-    XMMATRIX view, model, proj;
-
-    // Sun light
-    ConstantBuffer cBuffer;
-    cBuffer.directionalLight.Direction = XMFLOAT3(1.0f, -0.3f, 0.0f);
+    cBuffer.directionalLight.Position = XMFLOAT3(0.0f, 0.2f, 0.0f);
+    cBuffer.directionalLight.Direction = XMFLOAT3(0.0f, -0.52f, -1.0f);
     cBuffer.directionalLight.Strength = XMFLOAT3(1.0f, 1.0f, 0.0f);
+    cBuffer.directionalLight.FallOffStart = 0.1f;
+    cBuffer.directionalLight.FallOffEnd = 3.0f;
     //cBuffer.directionalLight.FallOffStart = 0.1f;
     //cBuffer.directionalLight.FallOffEnd = 5.0f;
 
     auto update_world_matrix = [&](XMFLOAT3 Translate, float Rotation, XMFLOAT3 Scale = XMFLOAT3(1.0f, 1.0f, 1.0f))
     {
             // View Matrix
-            XMVECTOR eyePos = XMVectorSet(0.0f, +3.0f, -6.0f, 0.0f);  // Camera position
+            //eyePos = XMVectorSet(0.0f, +3.0f, -6.0f, 0.0f);  // Camera position
             XMVECTOR focusPos = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);   // Where camera looks
             XMVECTOR upDir = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);   // Up direction
 
@@ -289,11 +437,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
             //model = translate;
             model = scale * rotation * translate;
+            modelNormal = rotation;
 
             //cBuffer.Model = XMMatrixTranspose(XMMatrixInverse(nullptr, model));
-            XMMATRIX Transpose = XMMatrixTranspose(rotation);
+            XMMATRIX Inverse = XMMatrixInverse(nullptr, model * view * proj);
 
-            cBuffer.Model = XMMatrixInverse(nullptr, Transpose);
+            XMStoreFloat4(&cBuffer.CameraPosition, eyePos);
+            cBuffer.Model = XMMatrixTranspose(model);
             cBuffer.World = XMMatrixTranspose(model * view * proj);
     };
     
@@ -460,8 +610,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // step 1: load the texture into a resource and upload heap
 
 
-    //ThrowIfFailed(commandAllocator->Reset());
-    ThrowIfFailed(commandList->Reset(commandAllocator, nullptr));
+    //
 
     ID3D12DescriptorHeap* textureDescriptorHeap = nullptr;
 
@@ -469,10 +618,28 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ComPtr<ID3D12Resource> checkboardUploadHeap = nullptr;
     ComPtr<ID3D12Resource> stoneResourceView = nullptr;
     ComPtr<ID3D12Resource> stoneUploadHeap = nullptr;
-
+    
+    ThrowIfFailed(commandAllocator->Reset());
+    ThrowIfFailed(commandList->Reset(commandAllocator, nullptr));
 
     ThrowIfFailed(CreateDDSTextureFromFile12(device, commandList, L"checkboard.dds", checkboardResourceView, checkboardUploadHeap));
     ThrowIfFailed(CreateDDSTextureFromFile12(device, commandList, L"Stone.dds", stoneResourceView, stoneUploadHeap));
+
+
+    ThrowIfFailed(commandList->Close());
+
+    ID3D12CommandList* cmdLists[] = { commandList };
+    commandQueue->ExecuteCommandLists(_countof(cmdLists), cmdLists);
+
+    // Sync the CPU/GPU
+    UINT64 fenceValue = 0;
+    ThrowIfFailed(commandQueue->Signal(fence, fenceValue));
+    if (fence->GetCompletedValue() < fenceValue)
+    {
+        fence->SetEventOnCompletion(fenceValue, fenceEvt);
+        WaitForSingleObject(fenceEvt, INFINITE);
+    }
+
 
     // step 2: shader resource view:
 
@@ -513,10 +680,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         D3D12_TEXTURE_ADDRESS_MODE_WRAP
     );
 
-    ThrowIfFailed(commandList->Close());
-
-    ID3D12CommandList* cmdLists[] = { commandList };
-    commandQueue->ExecuteCommandLists(_countof(cmdLists), cmdLists);
     /***********************************************************************************************************************************************************/
 
 
@@ -574,7 +737,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0U, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12U, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "UVCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24U, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        { "NORMAL", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 32U, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+        { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32U, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
     };
 
     // step 15 - pipeline state object
@@ -614,24 +777,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     //swapchaindesc.
     UINT64 frameIndex = 0;
-    UINT64 fenceValue = 0;
     IDXGISwapChain3* swapChain3 = nullptr;
     float angle = 0.f;
+    eyePos = XMVectorSet(0.0f, +3.0f, -6.0f, 0.0f);
     // Main message loop:
     while (msg.message != WM_QUIT)
     {
+
         angle += 0.2f;
 
         ThrowIfFailed(swapChain->QueryInterface(IID_PPV_ARGS(&swapChain3)));
         frameIndex = swapChain3->GetCurrentBackBufferIndex();
 
-        //frameIndex = (frameIndex + 1) % 3;
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-
         // reset the command objects
         ThrowIfFailed(commandAllocator->Reset());
         ThrowIfFailed(commandList->Reset(commandAllocator, nullptr));
@@ -675,13 +837,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         commandList->SetGraphicsRootDescriptorTable(1, texHeapStartGPU);
 
         // Draw Call #1
-        update_world_matrix(XMFLOAT3(-1.0f, 0.0f, 0.0f), angle);
+        update_world_matrix(XMFLOAT3(-1.0f, 1.0f, 0.0f), angle);
         CopyMemory(pCBVBytes[0], &cBuffer, sizeof(cBuffer));
         commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[0]->GetGPUVirtualAddress());
         commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
 
         // Draw Call #2
-        update_world_matrix(XMFLOAT3(+1.0f, 0.0f, 0.0f), -angle);
+        update_world_matrix(XMFLOAT3(+1.0f, 1.0f, 0.0f), -angle);
         CopyMemory(pCBVBytes[1], &cBuffer, sizeof(cBuffer));
         commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[1]->GetGPUVirtualAddress());
         commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
@@ -696,7 +858,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         commandList->IASetVertexBuffers(0, 1, &quad_vertex_buffer_view);
         commandList->IASetIndexBuffer(&quad_index_buffer_view);
 
-        update_world_matrix(XMFLOAT3(0.0f, -2.0f, +2.0f), 0.0f, XMFLOAT3(6.0f, 1.0f, 5.0f));
+        update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
         CopyMemory(pCBVBytes[2], &cBuffer, sizeof(cBuffer));
         commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[2]->GetGPUVirtualAddress());
         commandList->DrawIndexedInstanced(_countof(quad_indicies), 1, 0, 0, 0);
@@ -706,6 +868,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         ID3D12CommandList* cmdLists[] = { commandList };
         commandQueue->ExecuteCommandLists(_countof(cmdLists), cmdLists);
 
+        // Present the current back buffer to the screen
         ThrowIfFailed(swapChain->Present(1, 0));
         //continue;
 
@@ -767,13 +930,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hWnd = CreateWindowW(szWindowClass, L"D3D12 App", WS_OVERLAPPEDWINDOW,
        CW_USEDEFAULT, 0, 1920, 1080, nullptr, nullptr, hInstance, nullptr);
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
-
    ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+   //UpdateWindow(hWnd);
 
    return TRUE;
 }
@@ -788,53 +946,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - post a quit message and return
 //
 //
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch (message)
-    {
-    case WM_KEYDOWN:
-        if (wParam == VK_ESCAPE)
-        {
-            PostQuitMessage(0);
-            return 0;
 
-        }
-        break;
-
-    case WM_COMMAND:
-        {
-            int wmId = LOWORD(wParam);
-            // Parse the menu selections:
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
-        }
-        break;
-    case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code that uses hdc here...
-            EndPaint(hWnd, &ps);
-        }
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-        break;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
-}
 
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
