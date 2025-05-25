@@ -44,6 +44,8 @@ struct ConstantBuffer
     DirectX::XMMATRIX World;
     Light directionalLight;
     DirectX::XMFLOAT4 CameraPosition;
+    DirectX::XMFLOAT3 Pad0;
+    int DrawDepth;
 };
 XMVECTOR eyePos;
 XMMATRIX view, model, proj, modelNormal;
@@ -109,11 +111,37 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         if (wParam == 'Q')
         {
-            eyeP.y += 0.1f;
+            eyeP.y -= 0.1f;
         }
         if (wParam == 'E')
         {
-            eyeP.y -= 0.1f;
+            eyeP.y += 0.1f;
+        }
+
+        // Light
+        if (wParam == 'I')
+        {
+            cBuffer.directionalLight.Position.z += 0.1f;
+        }
+        if (wParam == 'K')
+        {
+            cBuffer.directionalLight.Position.z -= 0.1f;
+        }
+        if (wParam == 'J')
+        {
+            cBuffer.directionalLight.Position.x -= 0.1f;
+        }
+        if (wParam == 'L')
+        {
+            cBuffer.directionalLight.Position.x += 0.1f;
+        }
+        if (wParam == 'U')
+        {
+            cBuffer.directionalLight.Position.y -= 0.1f;
+        }
+        if (wParam == 'O')
+        {
+            cBuffer.directionalLight.Position.y += 0.1f;
         }
 
         eyePos = XMLoadFloat4(&eyeP);
@@ -395,18 +423,40 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     
     
 
-    Vertex quad_verticies[] = {
+    Vertex quad_verticies_y[] = {
+        { XMFLOAT3(-0.5f, 0.0f, -0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+        { XMFLOAT3(-0.5f, 0.0f, +0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f), XMFLOAT2(7.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+        { XMFLOAT3(+0.5f, 0.0f, +0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(7.0f, 7.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+        { XMFLOAT3(+0.5f, 0.0f, -0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 7.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+        
+    };
+
+    /*
+    Vertex quad_verticies_y[] = {
         { XMFLOAT3(-0.5f, 0.0f, -0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
         { XMFLOAT3(-0.5f, 0.0f, +0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f), XMFLOAT2(7.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
         { XMFLOAT3(+0.5f, 0.0f, +0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(7.0f, 7.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
         { XMFLOAT3(+0.5f, 0.0f, -0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 7.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
     };
-    UINT16 quad_indicies[] = {
+    */
+
+    UINT16 quad_indicies_y[] = {
         0, 1, 2,
         2, 3, 0
     };
 
-    cBuffer.directionalLight.Position = XMFLOAT3(0.0f, 0.2f, 0.0f);
+    Vertex quad_verticies_z[] = {
+        { XMFLOAT3(0.0f,  0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+        { XMFLOAT3(1.0f,  0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 0.0f), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+        { XMFLOAT3(1.0f, -1.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+        { XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+    };
+    UINT16 quad_indicies_z[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+
+    cBuffer.directionalLight.Position = XMFLOAT3(-1.0f, 1.0f, -1.0f);
     cBuffer.directionalLight.Direction = XMFLOAT3(0.0f, -0.52f, -1.0f);
     cBuffer.directionalLight.Strength = XMFLOAT3(1.0f, 1.0f, 0.0f);
     cBuffer.directionalLight.FallOffStart = 0.1f;
@@ -450,10 +500,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // Constant buffer steps
     // step 1: create 2 resources
-    ID3D12Resource* pCBVResource[3];
-    void* pCBVBytes[3];
 
-    for (UINT resource = 0; resource < 3; resource++)
+    const int CBV_Views = 5;
+    ID3D12Resource* pCBVResource[CBV_Views];
+    void* pCBVBytes[CBV_Views];
+
+    for (UINT resource = 0; resource < CBV_Views; resource++)
     {
         // step 1:
         auto cbuffer_desc = CD3DX12_RESOURCE_DESC::Buffer(512U);
@@ -548,11 +600,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     /***********************************************************************************************************************************************************/
     // Depth Buffer
 
-    ComPtr<ID3D12Resource> depthBufferResource;
+
+
+    // depth buffer
     D3D12_RESOURCE_DESC depthDesc;
     ZeroMemory(&depthDesc, sizeof(D3D12_RESOURCE_DESC));
 
-    depthDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    depthDesc.Format = DXGI_FORMAT_R32_TYPELESS;
     depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     depthDesc.Width = 1920;
     depthDesc.Height = 1080;
@@ -567,6 +621,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     clearValue.Format = DXGI_FORMAT_D32_FLOAT;
     clearValue.DepthStencil.Depth = 1.0f;
 
+    // depth buffer resource
+    ComPtr<ID3D12Resource> depthBufferResource;
     auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
     ThrowIfFailed(device->CreateCommittedResource(
         &heapProps,
@@ -577,6 +633,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         IID_PPV_ARGS(&depthBufferResource)
     ));
     
+    // depth stencil view desc
     D3D12_DEPTH_STENCIL_VIEW_DESC depthStenvilViewDesc;
     ZeroMemory(&depthStenvilViewDesc, sizeof(D3D12_DEPTH_STENCIL_VIEW_DESC));
 
@@ -601,6 +658,34 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     depthStencilView.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
     depthStencilView.DepthEnable = true;
 
+    // store the depth buffer resource in a src
+
+    ID3D12DescriptorHeap* depthStencilSRVHeap;
+
+    D3D12_DESCRIPTOR_HEAP_DESC depthSRVHeapDesc = {};
+    depthSRVHeapDesc.NumDescriptors = 1;
+    depthSRVHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    depthSRVHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    
+    ThrowIfFailed(device->CreateDescriptorHeap(&depthSRVHeapDesc, IID_PPV_ARGS(&depthStencilSRVHeap)));
+    
+    ComPtr<ID3D12DescriptorHeap> depthSRVDescriptorHeap;
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC depthSRVDesc = { };
+    depthSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    depthSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    depthSRVDesc.Format = DXGI_FORMAT_R32_FLOAT;    // HAS TO BE R32 Format
+    depthSRVDesc.Texture2D.MipLevels = 1;
+
+    D3D12_DESCRIPTOR_HEAP_DESC dsvDesc = { };
+    dsvDesc.NumDescriptors = 1;
+    dsvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    dsvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    ThrowIfFailed(device->CreateDescriptorHeap(&dsvDesc, IID_PPV_ARGS(&depthSRVDescriptorHeap)));
+
+    
+    device->CreateShaderResourceView(depthBufferResource.Get(), &depthSRVDesc, depthStencilSRVHeap->GetCPUDescriptorHandleForHeapStart());
+
     /***********************************************************************************************************************************************************/
 
     /***********************************************************************************************************************************************************/
@@ -612,7 +697,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     //
 
-    ID3D12DescriptorHeap* textureDescriptorHeap = nullptr;
 
     ComPtr<ID3D12Resource> checkboardResourceView = nullptr;
     ComPtr<ID3D12Resource> checkboardUploadHeap = nullptr;
@@ -648,6 +732,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     srvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     srvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
+    ID3D12DescriptorHeap* textureDescriptorHeap = nullptr;
     ThrowIfFailed(device->CreateDescriptorHeap(&srvDesc, IID_PPV_ARGS(&textureDescriptorHeap)));
 
 
@@ -685,8 +770,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     D3D12_VERTEX_BUFFER_VIEW cube_vertex_buffer_view = create_vertex_buffer_view(cube_verticies, sizeof(cube_verticies));
 
-    D3D12_VERTEX_BUFFER_VIEW quad_vertex_buffer_view = create_vertex_buffer_view(quad_verticies, sizeof(quad_verticies));
-    D3D12_INDEX_BUFFER_VIEW quad_index_buffer_view = create_index_buffer_view(quad_indicies, sizeof(quad_indicies));
+    D3D12_VERTEX_BUFFER_VIEW quad_vertex_buffer_view = create_vertex_buffer_view(quad_verticies_y, sizeof(quad_verticies_y));
+    D3D12_INDEX_BUFFER_VIEW quad_index_buffer_view = create_index_buffer_view(quad_indicies_y, sizeof(quad_indicies_y));
+
+    D3D12_VERTEX_BUFFER_VIEW screenspace_vertex_buffer_view = create_vertex_buffer_view(quad_verticies_z, sizeof(quad_verticies_z));
+    D3D12_INDEX_BUFFER_VIEW screenspace_index_buffer_view = create_index_buffer_view(quad_indicies_z, sizeof(quad_indicies_z));
 
     // step 12 - root signature (empty for now, we dont have any Constant Buffers or Shader Resources)
     ID3DBlob* signature;
@@ -696,15 +784,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ZeroMemory(&root_sig_desc, sizeof(CD3DX12_ROOT_SIGNATURE_DESC));
 
     // srv desciptor range:
-    D3D12_DESCRIPTOR_RANGE srvRange = {};
-    srvRange.BaseShaderRegister = 0; // base register
-    srvRange.NumDescriptors = 1;
-    srvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    srvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    D3D12_DESCRIPTOR_RANGE srvTextureRange = {};
+    srvTextureRange.BaseShaderRegister = 0; // base register
+    srvTextureRange.NumDescriptors = 1;
+    srvTextureRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    srvTextureRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    CD3DX12_ROOT_PARAMETER rootParameters[2];
+
+    D3D12_DESCRIPTOR_RANGE dsvTextureRange = {};
+    dsvTextureRange.BaseShaderRegister = 1; // base register
+    dsvTextureRange.NumDescriptors = 1;
+    dsvTextureRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    dsvTextureRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    CD3DX12_ROOT_PARAMETER rootParameters[3];
     rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
-    rootParameters[1].InitAsDescriptorTable(1, &srvRange, D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[1].InitAsDescriptorTable(1, &srvTextureRange, D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[2].InitAsDescriptorTable(1, &dsvTextureRange, D3D12_SHADER_VISIBILITY_ALL);
 
     root_sig_desc.Init(_countof(rootParameters), rootParameters, 1, &samplerState, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
     ThrowIfFailed(D3D12SerializeRootSignature(&root_sig_desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
@@ -829,9 +925,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+
+        //ID3D12DescriptorHeap* heaps[] = { textureDescriptorHeap, depthStencilSRVHeap };
         commandList->SetDescriptorHeaps(1, &textureDescriptorHeap);
 
+        //commandList->SetGraphicsRootDescriptorTable(2, depthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
+        cBuffer.DrawDepth = 0;
         CD3DX12_GPU_DESCRIPTOR_HANDLE texHeapStartGPU(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
         texHeapStartGPU.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
         commandList->SetGraphicsRootDescriptorTable(1, texHeapStartGPU);
@@ -850,7 +950,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
         texHeapStartGPU.Offset(-1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-        commandList->SetGraphicsRootDescriptorTable(1, texHeapStartGPU);
+        
+
+        CD3DX12_GPU_DESCRIPTOR_HANDLE depthHeapStartGPU(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+        depthHeapStartGPU.Offset(0, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+
+        commandList->SetGraphicsRootDescriptorTable(1, depthHeapStartGPU);
 
         // Draw Call #3
 
@@ -858,10 +963,39 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         commandList->IASetVertexBuffers(0, 1, &quad_vertex_buffer_view);
         commandList->IASetIndexBuffer(&quad_index_buffer_view);
 
+        commandList->SetDescriptorHeaps(1, &depthStencilSRVHeap);
+        commandList->SetGraphicsRootDescriptorTable(2, depthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
+        
+        //commandList->SetDescriptorHeaps(1, &depthStencilSRVHeap);
+        //commandList->SetGraphicsRootDescriptorTable(2, depthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
+
         update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
         CopyMemory(pCBVBytes[2], &cBuffer, sizeof(cBuffer));
         commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[2]->GetGPUVirtualAddress());
-        commandList->DrawIndexedInstanced(_countof(quad_indicies), 1, 0, 0, 0);
+        commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
+
+
+
+        update_world_matrix(XMFLOAT3(7.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
+        CopyMemory(pCBVBytes[3], &cBuffer, sizeof(cBuffer));
+        commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[3]->GetGPUVirtualAddress());
+        commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
+
+
+
+        //commandList->SetDescriptorHeaps(1, &textureDescriptorHeap);
+        //commandList->SetGraphicsRootDescriptorTable(1, textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+        commandList->SetDescriptorHeaps(1, &depthStencilSRVHeap);
+        commandList->SetGraphicsRootDescriptorTable(2, depthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
+        cBuffer.DrawDepth = 1;
+
+        commandList->IASetVertexBuffers(0, 1, &screenspace_vertex_buffer_view);
+        commandList->IASetIndexBuffer(&screenspace_index_buffer_view);
+
+        update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
+        CopyMemory(pCBVBytes[4], &cBuffer, sizeof(cBuffer));
+        commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[4]->GetGPUVirtualAddress());
+        commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
         ThrowIfFailed(commandList->Close());
 
@@ -927,7 +1061,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Store instance handle in our global variable
 
-   hWnd = CreateWindowW(szWindowClass, L"D3D12 App", WS_OVERLAPPEDWINDOW,
+   hWnd = CreateWindowW(szWindowClass, L"D3D12 Lighting & Depth Buffering", WS_OVERLAPPEDWINDOW,
        CW_USEDEFAULT, 0, 1920, 1080, nullptr, nullptr, hInstance, nullptr);
 
    ShowWindow(hWnd, nCmdShow);
