@@ -1,7 +1,8 @@
 
 struct VertexOut
 {
-	float4 pos : SV_POSITION;
+    float4 pos : SV_POSITION;
+    float3 worldP : POSITION3;
 	float3 col : COLOR;
 	float2 uv : UVCOORD;
 	float3 normal : NORMAL;
@@ -22,25 +23,26 @@ struct Light
 cbuffer ConstantBuffer : register(b0)
 {
 	float4x4 Model;
-	float4x4 World;
+    float4x4 World;
+    float4x4 LightViewProj;
 	Light directionalLight;
-	float4 CameraPosition;
-	float3 Pad0;
-	int DrawDepth;
+    float4 CameraPosition;
 }
 
-VertexOut VSMain(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, float3 n : NORMAL)
+VertexOut VSMainOpaque(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, float3 n : NORMAL)
 {
 	VertexOut vOut;
 	
-	float4 WorldP;
-	
-	if (DrawDepth == 0)
-		WorldP = mul(float4(p, 1.0f), World);
-	else
-		WorldP = float4(p, 1.0f);
+    float4 WorldP = mul(float4(p, 1.0f), World);
+    //float4 WorldPModel = mul(float4(p, 1.0f), Model);
+    //float4 WorldP = mul(WorldPModel, LightViewProj);
+    //float4 WorldP = mul(WorldPModel, LightViewProj); 
+    //float4 WorldP = mul(float4(p, 1.0f), LightViewProj);
+    //float4 LightP = mul(WorldP, LightViewProj);
+    //float4 LightP = mul(float4(p, 1.0f), LightViewProj);
 
-	vOut.pos = WorldP;
+    vOut.worldP = WorldP.xyz;
+    vOut.pos = WorldP;
 	vOut.col = c;
 	vOut.uv = uv;
     vOut.pixelPos = mul(float4(p, 1.0f), Model);
@@ -48,4 +50,38 @@ VertexOut VSMain(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, flo
 	vOut.normal = normalize(mul(n, (float3x3)Model));
 
 	return vOut;
+}
+
+VertexOut VSMainDepthCamera(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, float3 n : NORMAL)
+{
+    VertexOut vOut;
+	
+    float4 WorldP = float4(p, 1.0f);
+
+    vOut.pos = WorldP;
+    vOut.col = c;
+    vOut.uv = uv;
+    vOut.pixelPos = mul(float4(p, 1.0f), Model);
+    vOut.normal = normalize(mul(n, (float3x3) Model));
+
+    return vOut;
+}
+
+VertexOut VSMainShadow(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, float3 n : NORMAL)
+{
+    VertexOut vOut;
+    
+    float4 WorldP = mul(float4(p, 1.0f), Model);
+    float4 WorldPos = mul(WorldP, LightViewProj);
+    //float4 WorldPLight = mul(float4(p, 1.0f), LightViewProj);
+    //float4 WorldP = mul(LightViewProj, float4(p, 1.0f));
+
+    vOut.worldP = WorldP;
+    vOut.pos = WorldPos;
+    vOut.col = c;
+    vOut.uv = uv;
+    vOut.pixelPos = mul(float4(p, 1.0f), Model);
+    vOut.normal = normalize(mul(n, (float3x3) Model));
+
+    return vOut;
 }
