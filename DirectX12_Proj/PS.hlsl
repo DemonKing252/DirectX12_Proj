@@ -142,6 +142,7 @@ float PSMainShadow(VertexIn vIn) : SV_TARGET
 {
 	// Use texturing
     float depth = shadowMap.Sample(sampl, vIn.uv).r;
+    float4 texUV = tex.Sample(sampl, vIn.uv);
     //depth = pow(depth, 50);
-    return float4(depth.xxx, 1.0f);
+    return float4(texUV.xyz, 1.0f);
 }
