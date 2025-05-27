@@ -40,11 +40,11 @@ struct Light
 
 struct ConstantBuffer
 {
-    DirectX::XMMATRIX Model;
-    DirectX::XMMATRIX World;
+    XMMATRIX Model;
+    XMMATRIX World;
+    XMMATRIX LightViewProj;
     Light directionalLight;
-    DirectX::XMFLOAT4 CameraPosition;
-    DirectX::XMMATRIX LightViewProj;
+    XMFLOAT4 CameraPosition;
 };
 XMVECTOR eyePos;
 XMMATRIX view, model, proj, modelNormal;
@@ -182,9 +182,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPWSTR    lpCmdLine,
+    _In_ int       nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -197,7 +197,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
-    if (!InitInstance (hInstance, nCmdShow))
+    if (!InitInstance(hInstance, nCmdShow))
     {
         return FALSE;
     }
@@ -219,7 +219,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ID3D12Debug* debugController;
     ID3D12DescriptorHeap* rtvHeap;
     ID3D12Resource* rtvResources[3];
-    
+
     // optional but recommended: enable the debug layer
     ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
     debugController->EnableDebugLayer();
@@ -285,7 +285,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         // get buffer
         ThrowIfFailed(swapChain->GetBuffer(i, IID_PPV_ARGS(&rtvResources[i])));
 
-        
+
         // create rtv
         device->CreateRenderTargetView(rtvResources[i], nullptr, rtvCPUHandle);
 
@@ -294,7 +294,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
     assert(IsWindow(hWnd));
 
-    
+
 
     /*
         // vertex.x, vertex.y, color.r, color.g, color.b
@@ -343,7 +343,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         /*3*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
         /*3*/XMFLOAT3({+0.5f, -0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
         /*3*/XMFLOAT3({+0.5f, -0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left--------------------------------------
-                                                         
+
         /*3*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left--------------------------------------
         /*3*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
         /*3*/XMFLOAT3({-0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
@@ -353,7 +353,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
 
-                                                                            
+
         ///*4*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), // top left
         ///*5*/XMFLOAT3({-0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), // top right
         ///*6*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), // bottom right
@@ -419,15 +419,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ///*6*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), // bottom right
     ///*7*/XMFLOAT3({+0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), // bottom left
 
-    
-    
+
+
 
     Vertex quad_verticies_y[] = {
         { XMFLOAT3(-0.5f, 0.0f, -0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
         { XMFLOAT3(-0.5f, 0.0f, +0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f), XMFLOAT2(7.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
         { XMFLOAT3(+0.5f, 0.0f, +0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(7.0f, 7.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
         { XMFLOAT3(+0.5f, 0.0f, -0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 7.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-        
+
     };
 
     /*
@@ -463,37 +463,37 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     //cBuffer.directionalLight.FallOffStart = 0.1f;
     //cBuffer.directionalLight.FallOffEnd = 5.0f;
 
-    auto update_world_pass_constants = [&](XMFLOAT3 Translate, float Rotation, XMFLOAT3 Scale = XMFLOAT3(1.0f, 1.0f, 1.0f))
+    auto update_world_matrix = [&](XMFLOAT3 Translate, float Rotation, XMFLOAT3 Scale = XMFLOAT3(1.0f, 1.0f, 1.0f))
     {
-            // View Matrix
-            //eyePos = XMVectorSet(0.0f, +3.0f, -6.0f, 0.0f);  // Camera position
-            XMVECTOR focusPos = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);   // Where camera looks
-            XMVECTOR upDir = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);   // Up direction
+        // View Matrix
+        //eyePos = XMVectorSet(0.0f, +3.0f, -6.0f, 0.0f);  // Camera position
+        XMVECTOR focusPos = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);   // Where camera looks
+        XMVECTOR upDir = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);   // Up direction
 
-            view = XMMatrixLookAtLH(eyePos, focusPos, upDir);
+        view = XMMatrixLookAtLH(eyePos, focusPos, upDir);
 
-            // Projection Matrix
-            float fovAngleY = XMConvertToRadians(45.0f); // 45 degree FOV vertical
-            float aspectRatio = 1920.0f / 1080.0f;            // Width / Height of viewport
-            float nearZ = 0.1f;
-            float farZ = 100.0f;
+        // Projection Matrix
+        float fovAngleY = XMConvertToRadians(45.0f); // 45 degree FOV vertical
+        float aspectRatio = 1920.0f / 1080.0f;            // Width / Height of viewport
+        float nearZ = 0.1f;
+        float farZ = 100.0f;
 
-            proj = XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, nearZ, farZ);
+        proj = XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, nearZ, farZ);
 
-            XMMATRIX scale = XMMatrixScaling(Scale.x, Scale.y, Scale.z);
-            XMMATRIX rotation = XMMatrixRotationRollPitchYaw(XMConvertToRadians(0.0f), XMConvertToRadians(Rotation), XMConvertToRadians(0.0f));
-            XMMATRIX translate = XMMatrixTranslation(Translate.x, Translate.y, Translate.z);
+        XMMATRIX scale = XMMatrixScaling(Scale.x, Scale.y, Scale.z);
+        XMMATRIX rotation = XMMatrixRotationRollPitchYaw(XMConvertToRadians(0.0f), XMConvertToRadians(Rotation), XMConvertToRadians(0.0f));
+        XMMATRIX translate = XMMatrixTranslation(Translate.x, Translate.y, Translate.z);
 
-            //model = translate;
-            model = scale * rotation * translate;
-            modelNormal = rotation;
+        //model = translate;
+        model = scale * rotation * translate;
+        modelNormal = rotation;
 
 
-            XMStoreFloat4(&cBuffer.CameraPosition, eyePos);
-            cBuffer.Model = XMMatrixTranspose(model);
-            cBuffer.World = XMMatrixTranspose(model * view * proj);
+        XMStoreFloat4(&cBuffer.CameraPosition, eyePos);
+        cBuffer.Model = XMMatrixTranspose(model);
+        cBuffer.World = XMMatrixTranspose(model * view * proj);
     };
-    
+
 
     // Constant buffer steps
     // step 1: create 2 resources
@@ -522,7 +522,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         pCBVResource[resource]->Unmap(0, nullptr);
     }
 
-    auto create_vertex_buffer_view = [&device](Vertex *verticies, std::size_t vertexSize) -> D3D12_VERTEX_BUFFER_VIEW
+    auto create_vertex_buffer_view = [&device](Vertex* verticies, std::size_t vertexSize) -> D3D12_VERTEX_BUFFER_VIEW
     {
         void* pData;
         ID3D12Resource* pVertexBufferViewResource = nullptr;
@@ -632,8 +632,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             IID_PPV_ARGS(&depthBufferResource)
         ));
     }
-    
-    
+
+
     // depth stencil view desc
     D3D12_DEPTH_STENCIL_VIEW_DESC depthStenvilViewDesc;
     ZeroMemory(&depthStenvilViewDesc, sizeof(D3D12_DEPTH_STENCIL_VIEW_DESC));
@@ -648,11 +648,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     depthdescHeapDesc.NumDescriptors = 1;
     depthdescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-    
+
     ThrowIfFailed(device->CreateDescriptorHeap(&depthdescHeapDesc, IID_PPV_ARGS(&depthDescriptorHeap)));
     device->CreateDepthStencilView(depthBufferResource.Get(), &depthStenvilViewDesc, depthDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
-    
+
 
     // store the depth buffer resource in a src
 
@@ -662,9 +662,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     depthSRVHeapDesc.NumDescriptors = 1;
     depthSRVHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     depthSRVHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    
+
     ThrowIfFailed(device->CreateDescriptorHeap(&depthSRVHeapDesc, IID_PPV_ARGS(&depthStencilSRVHeap)));
-    
+
     ComPtr<ID3D12DescriptorHeap> depthSRVDescriptorHeap;
 
     D3D12_SHADER_RESOURCE_VIEW_DESC depthSRVDesc = { };
@@ -679,15 +679,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     dsvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     ThrowIfFailed(device->CreateDescriptorHeap(&dsvDesc, IID_PPV_ARGS(&depthSRVDescriptorHeap)));
 
-    
+
     device->CreateShaderResourceView(depthBufferResource.Get(), &depthSRVDesc, depthStencilSRVHeap->GetCPUDescriptorHandleForHeapStart());
 
-    D3D12_DEPTH_STENCIL_DESC depthStencilView;
-    ZeroMemory(&depthStencilView, sizeof(D3D12_DEPTH_STENCIL_VIEW_DESC));
+    D3D12_DEPTH_STENCIL_DESC depthStencilOnView;
+    ZeroMemory(&depthStencilOnView, sizeof(D3D12_DEPTH_STENCIL_VIEW_DESC));
 
-    depthStencilView.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-    depthStencilView.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-    depthStencilView.DepthEnable = true;
+    depthStencilOnView.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    depthStencilOnView.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+    depthStencilOnView.DepthEnable = true;
+
+    D3D12_DEPTH_STENCIL_DESC depthStencilOffView;
+    ZeroMemory(&depthStencilOffView, sizeof(D3D12_DEPTH_STENCIL_VIEW_DESC));
+
+    depthStencilOffView.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+    depthStencilOffView.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+    depthStencilOffView.DepthEnable = false;
 
 
     /*****************************************************/
@@ -739,7 +746,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
         device->CreateDepthStencilView(shadowMapResource.Get(), &dsvDesc, shadowDSVHeap->GetCPUDescriptorHandleForHeapStart());
     }
-    
+
 
     ID3D12DescriptorHeap* shadowDepthStencilSRVHeap;
     {
@@ -762,9 +769,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
         device->CreateShaderResourceView(shadowMapResource.Get(), &depthSRVDesc, shadowDepthStencilSRVHeap->GetCPUDescriptorHandleForHeapStart());
     }
-
+    //XMFLOAT4(0.0f, 4.0f, 4.0f, 1.0f)
     // Light Projection
-    auto update_shadow_pass_constants = [&](XMFLOAT3 Translate, float Rotation, XMFLOAT3 Scale = XMFLOAT3(1.0f, 1.0f, 1.0f))
+    auto update_shadow_object = [&](XMFLOAT3 Translate, float Rotation, XMFLOAT3 Scale = XMFLOAT3(1.0f, 1.0f, 1.0f))
     {
         // Example values
         // 0.0f, -0.5f, -1.0f
@@ -774,15 +781,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         XMVECTOR lightDir = XMVector3Normalize(XMVectorSet(cBuffer.directionalLight.Direction.x, cBuffer.directionalLight.Direction.y, cBuffer.directionalLight.Direction.z, 0.0f)); // Directional light pointing diagonally
         XMVECTOR sceneCenter = XMVectorSet(0, 0, 0, 1);
         float distanceBack = 10.0f; // How far back the light camera is placed
-        float sceneRadius = 10.0f;
+        float sceneRadius = 4.0f;
 
-        XMFLOAT4 LightP = XMFLOAT4(0.0f, 3.0f, 3.0f, 1.0f);
+        XMFLOAT4 LightP = XMFLOAT4(0.0f, 4.0f, 4.0f, 1.0f);
         XMVECTOR lightPos = XMLoadFloat4(&LightP);
         //XMVECTOR lightPos = (sceneCenter - lightDir) * distanceBack;
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
         XMMATRIX lightView = XMMatrixLookAtLH(lightPos, sceneCenter, up);
-        XMMATRIX lightProjection = XMMatrixOrthographicOffCenterLH(-sceneRadius, sceneRadius, -sceneRadius, sceneRadius, 0.01f, 20.0f);
+        XMMATRIX lightProjection = XMMatrixOrthographicOffCenterLH(-sceneRadius, sceneRadius, -sceneRadius, sceneRadius, 0.01f, 9.0f);
 
         XMMATRIX lightViewProjection = lightProjection * lightView;
 
@@ -795,10 +802,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
         XMStoreFloat4(&cBuffer.CameraPosition, eyePos);
         cBuffer.Model = XMMatrixTranspose(model);
+        
         cBuffer.World = XMMatrixTranspose(model * view * proj);
-
         cBuffer.LightViewProj = XMMatrixTranspose(model * lightView * lightProjection);
-        //cBuffer.World = XMMatrixTranspose(model * view * proj);
+
     };
 
     /***********************************************************************************************************************************************************/
@@ -817,7 +824,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ComPtr<ID3D12Resource> checkboardUploadHeap = nullptr;
     ComPtr<ID3D12Resource> stoneResourceView = nullptr;
     ComPtr<ID3D12Resource> stoneUploadHeap = nullptr;
-    
+
     ThrowIfFailed(commandAllocator->Reset());
     ThrowIfFailed(commandList->Reset(commandAllocator, nullptr));
 
@@ -869,15 +876,32 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     device->CreateShaderResourceView(stoneResourceView.Get(), &shaderResourceViewDesc, texHeapStartCPU);
 
-    
+
     // step 3: sampler state:
-    CD3DX12_STATIC_SAMPLER_DESC samplerState;
-    samplerState.Init(
+    CD3DX12_STATIC_SAMPLER_DESC samplerState[2];
+    samplerState[0].Init(
         0, // base register
         D3D12_FILTER_MIN_MAG_MIP_POINT,
         D3D12_TEXTURE_ADDRESS_MODE_WRAP,
         D3D12_TEXTURE_ADDRESS_MODE_WRAP,
         D3D12_TEXTURE_ADDRESS_MODE_WRAP
+    );
+
+    // shadow sampler
+    CD3DX12_STATIC_SAMPLER_DESC shadowSampler;
+    samplerState[1].Init(
+        1, // shader register
+        D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT, // comparison filtering
+        D3D12_TEXTURE_ADDRESS_MODE_CLAMP, // addressU
+        D3D12_TEXTURE_ADDRESS_MODE_CLAMP, // addressV
+        D3D12_TEXTURE_ADDRESS_MODE_CLAMP, // addressW
+        0.0f, // mipLODBias
+        16, // maxAnisotropy
+        D3D12_COMPARISON_FUNC_LESS_EQUAL, // comparison function
+        D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK, // border color
+        0, // minLOD
+        D3D12_FLOAT32_MAX, // maxLOD
+        D3D12_SHADER_VISIBILITY_PIXEL // shader visibility
     );
 
     /***********************************************************************************************************************************************************/
@@ -918,13 +942,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     shadowTextureRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     shadowTextureRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    CD3DX12_ROOT_PARAMETER rootParameters[4];
+    D3D12_DESCRIPTOR_RANGE shadowTextureRange1 = {};
+    shadowTextureRange1.BaseShaderRegister = 3; // base register
+    shadowTextureRange1.NumDescriptors = 1;
+    shadowTextureRange1.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    shadowTextureRange1.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    CD3DX12_ROOT_PARAMETER rootParameters[5];
     rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
     rootParameters[1].InitAsDescriptorTable(1, &srvTextureRange, D3D12_SHADER_VISIBILITY_ALL);
     rootParameters[2].InitAsDescriptorTable(1, &dsvTextureRange, D3D12_SHADER_VISIBILITY_ALL);
     rootParameters[3].InitAsDescriptorTable(1, &shadowTextureRange, D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[4].InitAsDescriptorTable(1, &shadowTextureRange1, D3D12_SHADER_VISIBILITY_ALL);
 
-    root_sig_desc.Init(_countof(rootParameters), rootParameters, 1, &samplerState, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+    root_sig_desc.Init(_countof(rootParameters), rootParameters, _countof(samplerState), samplerState, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
     ThrowIfFailed(D3D12SerializeRootSignature(&root_sig_desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
     ThrowIfFailed(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
 
@@ -949,7 +980,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         OutputDebugStringA((char*)errors->GetBufferPointer());
         __debugbreak();
     }
-    
+
     hr = D3DCompileFromFile(L"PS.hlsl", nullptr, nullptr, "PSMainOpaque", "ps_5_0", D3DCOMPILE_DEBUG, 0, &ps_opaque, &errors);
     if (FAILED(hr))
     {
@@ -985,7 +1016,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
     // step 14 - input layout that describes how our vertex buffer is layed out
-    
+
     D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0U, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12U, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -1012,7 +1043,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     opaquePsoDesc.NumRenderTargets = 1;
     opaquePsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     opaquePsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-    opaquePsoDesc.DepthStencilState = depthStencilView;
+    opaquePsoDesc.DepthStencilState = depthStencilOnView;
 
     ThrowIfFailed(device->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&opaquePipelineState)));
 
@@ -1024,6 +1055,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ThrowIfFailed(device->CreateGraphicsPipelineState(&depthCameraPsoDesc, IID_PPV_ARGS(&depthPipelineState)));
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC shadowCameraPsoDesc = opaquePsoDesc;
+
+    opaquePsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     shadowCameraPsoDesc.VS = { vs_shadow_opaque->GetBufferPointer(), vs_shadow_opaque->GetBufferSize() };
     shadowCameraPsoDesc.PS = { ps_shadow_opaque->GetBufferPointer(), ps_shadow_opaque->GetBufferSize() };
 
@@ -1053,15 +1086,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     float angle = 0.f;
     eyePos = XMVectorSet(0.0f, +3.0f, -6.0f, 0.0f);
     // Main message loop:
-    while (msg.message != WM_QUIT)
+    //while (msg.message != WM_QUIT)
     while (msg.message != WM_QUIT)
     {
-
+    
         angle += 0.2f;
-
+    
         ThrowIfFailed(swapChain->QueryInterface(IID_PPV_ARGS(&swapChain3)));
         frameIndex = swapChain3->GetCurrentBackBufferIndex();
-
+    
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
@@ -1070,185 +1103,272 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         // reset the command objects
         ThrowIfFailed(commandAllocator->Reset());
         ThrowIfFailed(commandList->Reset(commandAllocator, nullptr));
-
+    
         // indicate that the back buffer will be used as a render target
         auto transition = CD3DX12_RESOURCE_BARRIER::Transition(rtvResources[frameIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
         commandList->ResourceBarrier(1, &transition);
-
-
+    
+    
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
         rtvHandle.Offset(frameIndex, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-
-
-
+    
+    
+    
         //auto depth_heap_start = shadowDepthStencilSRVHeap->GetCPUDescriptorHandleForHeapStart();
         //commandList->OMSetRenderTargets(1, nullptr, FALSE, &depth_heap_start);
-
+    
         //commandList->ClearDepthStencilView(depth_heap_start, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
+    
         // finally clear render target view
-
-        
+    
+    
         //auto target_to_present = CD3DX12_RESOURCE_BARRIER::Transition(rtvResources[frameIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
         //commandList->ResourceBarrier(1, &target_to_present);
-
-
+    
+    
         commandList->RSSetScissorRects(1, &scissorsRect);
         commandList->RSSetViewports(1, &viewport);
-
         commandList->SetGraphicsRootSignature(rootSignature);
-
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-        commandList->SetDescriptorHeaps(1, &textureDescriptorHeap);
-
+    
         // Draw the shadow map
-        
-
-        auto depth_heap_start = shadowDSVHeap->GetCPUDescriptorHandleForHeapStart();
-        commandList->OMSetRenderTargets(0, &rtvHandle, FALSE, &depth_heap_start);
-
+    
+    
+    
         float clear_color[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
-        commandList->ClearRenderTargetView(rtvHandle, clear_color, 0, nullptr);
-        commandList->ClearDepthStencilView(depth_heap_start, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+    
         // indicate that the back buffer will be used as a render target
         //transition = CD3DX12_RESOURCE_BARRIER::Transition(rtvResources[frameIndex], D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
         //commandList->ResourceBarrier(1, &transition);
-
+    
         // get the current back buffer resource heap, and set it to the render target
-        commandList->SetPipelineState(shadowPipelineState);
-
-        if (0 == 1)
+        
+    
+        if (1)
         {
-            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            // -------------------------- Pipeline States --------------------------
+            
+            // Set pipeline state to shadow Pipeline
+            commandList->SetPipelineState(shadowPipelineState);
+    
+            // Bind the RTV and Shadow Depth Buffer
+            auto depth_heap_start = shadowDSVHeap->GetCPUDescriptorHandleForHeapStart();
+            commandList->OMSetRenderTargets(0, nullptr, FALSE, &depth_heap_start);
+    
+            // Clear RTV and Depth Buffer
+            //commandList->ClearRenderTargetView(rtvHandle, clear_color, 0, nullptr);
+            commandList->ClearDepthStencilView(depth_heap_start, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+            commandList->SetDescriptorHeaps(1, &textureDescriptorHeap);
+            commandList->SetGraphicsRootDescriptorTable(1, textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+
+            commandList->SetDescriptorHeaps(1, &shadowDepthStencilSRVHeap);
+            commandList->SetGraphicsRootDescriptorTable(3, shadowDepthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
+
+            commandList->SetDescriptorHeaps(1, &shadowDepthStencilSRVHeap);
+            commandList->SetGraphicsRootDescriptorTable(4, shadowDepthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
+
+            // -------------------------- Draw Calls --------------------------
+    
             // Shadow Draw Call #1
-            update_world_pass_constants(XMFLOAT3(-1.0f, 1.0f, 0.0f), angle);
+            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            update_shadow_object(XMFLOAT3(-1.0f, 3.0f, 0.0f), -angle);
             CopyMemory(pCBVBytes[0], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[0]->GetGPUVirtualAddress());
             commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
-
+    
             // Shadow Draw Call #2
-            update_world_pass_constants(XMFLOAT3(+1.0f, 1.0f, 0.0f), -angle);
+            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            update_shadow_object(XMFLOAT3(+1.0f, 3.0f, 0.0f), -angle);
             CopyMemory(pCBVBytes[1], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[1]->GetGPUVirtualAddress());
             commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
-
-
+    
+            // Shadow Draw Call #3
             commandList->IASetVertexBuffers(0, 1, &quad_vertex_buffer_view);
             commandList->IASetIndexBuffer(&quad_index_buffer_view);
-
-            // Shadow Draw Call #3
-            update_world_pass_constants(XMFLOAT3(0.0f, 2.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
+            update_shadow_object(XMFLOAT3(0.0f, 2.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
             CopyMemory(pCBVBytes[2], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[2]->GetGPUVirtualAddress());
             commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
-
-
-
+    
+            // Shadow Draw Call #3
+    
+    
+    
             // Swap Vertex buffers and Index buffers, we are drawing a quad:
-
+    
             //commandList->SetDescriptorHeaps(1, &depthStencilSRVHeap);
             //commandList->SetGraphicsRootDescriptorTable(2, depthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
         }
-
-        commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &depth_heap_start);
-
-        if (1 == 1)
+    
+    
+    
+    
+        // Draw Regular scene
+        if (0)
         {
-            commandList->SetPipelineState(opaquePipelineState);        
-            depth_heap_start = depthDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-
-            // get the current back buffer resource heap, and set it to the render target
+            commandList->SetPipelineState(opaquePipelineState);
+    
+            auto depth_heap_start = depthDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    
             commandList->ClearRenderTargetView(rtvHandle, clear_color, 0, nullptr);
+    
+            // get the current back buffer resource heap, and set it to the render target
+            commandList->OMSetRenderTargets(1, nullptr, FALSE, &depth_heap_start);
             commandList->ClearDepthStencilView(depth_heap_start, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
-
-
-
-            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-
-
+    
+    
+    
             CD3DX12_GPU_DESCRIPTOR_HANDLE texHeapStartGPU(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
             texHeapStartGPU.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
             commandList->SetGraphicsRootDescriptorTable(1, texHeapStartGPU);
+    
+            /*
+            // Shadow Draw Call #1
+            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            update_shadow_object(XMFLOAT3(-1.0f, 3.0f, 0.0f), -angle);
+            CopyMemory(pCBVBytes[0], &cBuffer, sizeof(cBuffer));
+            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[0]->GetGPUVirtualAddress());
+            commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
+    
+            // Shadow Draw Call #2
+            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            update_shadow_object(XMFLOAT3(+1.0f, 3.0f, 0.0f), -angle);
+            CopyMemory(pCBVBytes[1], &cBuffer, sizeof(cBuffer));
+            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[1]->GetGPUVirtualAddress());
+            commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
+    
+            // Shadow Draw Call #3
+            commandList->IASetVertexBuffers(0, 1, &quad_vertex_buffer_view);
+            commandList->IASetIndexBuffer(&quad_index_buffer_view);
+            update_world_matrix(XMFLOAT3(0.0f, 2.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
+            CopyMemory(pCBVBytes[2], &cBuffer, sizeof(cBuffer));
+            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[2]->GetGPUVirtualAddress());
+            commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
+            */
+    
+            // ----------------------------------------------------------------------------------------------------------------------------------------------------
+            // Draw Regular Scene
+    
+            // Draw Call #1
+            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            update_world_matrix(XMFLOAT3(-1.0f, 1.0f, 0.0f), angle);
+            CopyMemory(pCBVBytes[3], &cBuffer, sizeof(cBuffer));
+            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[3]->GetGPUVirtualAddress());
+            commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
+    
+            // Draw Call #2
+            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            update_world_matrix(XMFLOAT3(+1.0f, 1.0f, 0.0f), -angle);
+            CopyMemory(pCBVBytes[4], &cBuffer, sizeof(cBuffer));
+            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[4]->GetGPUVirtualAddress());
+            commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
+    
+            texHeapStartGPU.Offset(-1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+    
+    
+            CD3DX12_GPU_DESCRIPTOR_HANDLE depthHeapStartGPU(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+            depthHeapStartGPU.Offset(0, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+    
+            commandList->SetGraphicsRootDescriptorTable(1, depthHeapStartGPU);
+    
+            // Draw Call #3
+    
+            // Swap Vertex buffers and Index buffers, we are drawing a quad:
+            commandList->IASetVertexBuffers(0, 1, &quad_vertex_buffer_view);
+            commandList->IASetIndexBuffer(&quad_index_buffer_view);
+    
+            // Draw the quad off in center
+            update_world_matrix(XMFLOAT3(7.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
+            CopyMemory(pCBVBytes[6], &cBuffer, sizeof(cBuffer));
+            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[6]->GetGPUVirtualAddress());
+            commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
+    
+    
+            // Draw the quad off to the right
+            update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
+            CopyMemory(pCBVBytes[5], &cBuffer, sizeof(cBuffer));
+            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[5]->GetGPUVirtualAddress());
+            commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
+        }
+    
+        
+        
+        // Debug Draw Shadow buffer
+        if (1)
+        {
+
+            commandList->SetDescriptorHeaps(1, &shadowDepthStencilSRVHeap);
+            commandList->SetGraphicsRootDescriptorTable(2, shadowDepthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
+
+            // Now we are ready to clear the render target view
+
+            auto depth_heap_start = depthDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+            commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &depth_heap_start);
+            //commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+            // Clear RTV and Depth Buffer
+            commandList->ClearRenderTargetView(rtvHandle, clear_color, 0, nullptr);
+            commandList->ClearDepthStencilView(depth_heap_start, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+            // ------------------------------------------------------ Draw Regular Scene --------------------------------------------------------
+
+            // Bind the Opaque PSO
+            commandList->SetPipelineState(opaquePipelineState);
 
             // Draw Call #1
-            update_world_pass_constants(XMFLOAT3(-1.0f, 1.0f, 0.0f), angle);
+            update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
+            CopyMemory(pCBVBytes[5], &cBuffer, sizeof(cBuffer));
+            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[5]->GetGPUVirtualAddress());
+            commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
+
+            // Draw Call #2
+            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            update_world_matrix(XMFLOAT3(-1.0f, 1.0f, 0.0f), angle);
             CopyMemory(pCBVBytes[3], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[3]->GetGPUVirtualAddress());
             commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
 
-            // Draw Call #2
-            update_world_pass_constants(XMFLOAT3(+1.0f, 1.0f, 0.0f), -angle);
+            // Draw Call #3
+            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            update_world_matrix(XMFLOAT3(+1.0f, 1.0f, 0.0f), -angle);
             CopyMemory(pCBVBytes[4], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[4]->GetGPUVirtualAddress());
             commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
 
 
-            texHeapStartGPU.Offset(-1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+            // ------------------------------------------------------ Draw Quad --------------------------------------------------------
 
-
-            CD3DX12_GPU_DESCRIPTOR_HANDLE depthHeapStartGPU(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-            depthHeapStartGPU.Offset(0, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-
-            commandList->SetGraphicsRootDescriptorTable(1, depthHeapStartGPU);
-
-            // Draw Call #3
-
-            // Swap Vertex buffers and Index buffers, we are drawing a quad:
-            commandList->IASetVertexBuffers(0, 1, &quad_vertex_buffer_view);
-            commandList->IASetIndexBuffer(&quad_index_buffer_view);
-
-            //commandList->SetDescriptorHeaps(1, &depthStencilSRVHeap);
-            //commandList->SetGraphicsRootDescriptorTable(2, depthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
-
-            //commandList->SetDescriptorHeaps(1, &depthStencilSRVHeap);
-            //commandList->SetGraphicsRootDescriptorTable(2, depthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
-
-            // 
-            update_world_pass_constants(XMFLOAT3(7.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
-            CopyMemory(pCBVBytes[6], &cBuffer, sizeof(cBuffer));
-            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[6]->GetGPUVirtualAddress());
-            commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
-            
-            // Draw the quad off to the right
-            update_world_pass_constants(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
-            CopyMemory(pCBVBytes[5], &cBuffer, sizeof(cBuffer));
-            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[5]->GetGPUVirtualAddress());
-            commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
-        }
-        
-
-        if (1 == 1) // draw debug quad 
-        {
-            commandList->SetDescriptorHeaps(1, &shadowDepthStencilSRVHeap);
-            commandList->SetGraphicsRootDescriptorTable(3, shadowDepthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
+            // Bind the SRV pointer to the depth buffer
+    
+            // Switch to our Shadow VS and PS
+            commandList->SetPipelineState(depthPipelineState);
+    
+            // Set the Vertex Buffer & Index Buffer views
             commandList->IASetVertexBuffers(0, 1, &screenspace_vertex_buffer_view);
             commandList->IASetIndexBuffer(&screenspace_index_buffer_view);
-
-            commandList->SetPipelineState(depthPipelineState);
-            commandList->SetDescriptorHeaps(1, &shadowDepthStencilSRVHeap);
-            commandList->SetGraphicsRootDescriptorTable(2, shadowDepthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
-
+    
+    
             // Draw the quad that's used to show the shadow map
-
-            update_world_pass_constants(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
+            update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
             CopyMemory(pCBVBytes[7], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[7]->GetGPUVirtualAddress());
             commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
         }
+    
         
-        
-
+    
+    
         ThrowIfFailed(commandList->Close());
-
+    
         ID3D12CommandList* cmdLists[] = { commandList };
         commandQueue->ExecuteCommandLists(_countof(cmdLists), cmdLists);
-
+    
         // Present the current back buffer to the screen
         ThrowIfFailed(swapChain->Present(1, 0));
         //continue;
-
+    
         // Sync the CPU/GPU
         ThrowIfFailed(commandQueue->Signal(fence, fenceValue));
         if (fence->GetCompletedValue() < fenceValue)
@@ -1259,7 +1379,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         fenceValue++;
     }
 
-    return (int) msg.wParam;
+    return (int)msg.wParam;
 }
 
 
@@ -1275,17 +1395,17 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_DIRECTX12PROJ));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_DIRECTX12PROJ);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc = WndProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_DIRECTX12PROJ));
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_DIRECTX12PROJ);
+    wcex.lpszClassName = szWindowClass;
+    wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
     //ss
     return RegisterClassExW(&wcex);
 }
@@ -1302,15 +1422,15 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   hInst = hInstance; // Store instance handle in our global variable
+    hInst = hInstance; // Store instance handle in our global variable
 
-   hWnd = CreateWindowW(szWindowClass, L"D3D12 Shadow Mapping", WS_OVERLAPPEDWINDOW,
-       CW_USEDEFAULT, 0, 1920, 1080, nullptr, nullptr, hInstance, nullptr);
+    hWnd = CreateWindowW(szWindowClass, L"D3D12 Shadow Mapping", WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, 0, 1920, 1080, nullptr, nullptr, hInstance, nullptr);
 
-   ShowWindow(hWnd, nCmdShow);
-   //UpdateWindow(hWnd);
+    ShowWindow(hWnd, nCmdShow);
+    //UpdateWindow(hWnd);
 
-   return TRUE;
+    return TRUE;
 }
 
 //
