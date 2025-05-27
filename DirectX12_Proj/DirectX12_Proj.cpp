@@ -770,6 +770,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         device->CreateShaderResourceView(shadowMapResource.Get(), &depthSRVDesc, shadowDepthStencilSRVHeap->GetCPUDescriptorHandleForHeapStart());
     }
     //XMFLOAT4(0.0f, 4.0f, 4.0f, 1.0f)
+    cBuffer.directionalLight.Position = XMFLOAT3(0.0f, 4.0f, -4.0f);
     // Light Projection
     auto update_shadow_object = [&](XMFLOAT3 Translate, float Rotation, XMFLOAT3 Scale = XMFLOAT3(1.0f, 1.0f, 1.0f))
     {
@@ -783,7 +784,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         float distanceBack = 10.0f; // How far back the light camera is placed
         float sceneRadius = 4.0f;
 
-        XMFLOAT4 LightP = XMFLOAT4(0.0f, 4.0f, 4.0f, 1.0f);
+        XMFLOAT4 LightP = XMFLOAT4(cBuffer.directionalLight.Position.x, cBuffer.directionalLight.Position.y, cBuffer.directionalLight.Position.z, 1.0f);
+        //XMFLOAT4 LightP = XMFLOAT4(0.0f, 4.0f, 4.0f, 1.0f);
         XMVECTOR lightPos = XMLoadFloat4(&LightP);
         //XMVECTOR lightPos = (sceneCenter - lightDir) * distanceBack;
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
@@ -799,12 +801,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
         //model = translate;
         model = scale * rotation * translate;
+        //model = translate * rotation * scale;
 
         XMStoreFloat4(&cBuffer.CameraPosition, eyePos);
         cBuffer.Model = XMMatrixTranspose(model);
         
         cBuffer.World = XMMatrixTranspose(model * view * proj);
-        cBuffer.LightViewProj = XMMatrixTranspose(model * lightView * lightProjection);
+        cBuffer.LightViewProj = XMMatrixTranspose(lightView * lightProjection);
+        //cBuffer.LightViewProj = XMMatrixTranspose(lightProjection * lightView);
 
     };
 
@@ -896,7 +900,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         D3D12_TEXTURE_ADDRESS_MODE_CLAMP, // addressV
         D3D12_TEXTURE_ADDRESS_MODE_CLAMP, // addressW
         0.0f, // mipLODBias
-        16, // maxAnisotropy
+        1, // maxAnisotropy
         D3D12_COMPARISON_FUNC_LESS_EQUAL, // comparison function
         D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK, // border color
         0, // minLOD
@@ -1060,6 +1064,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     shadowCameraPsoDesc.VS = { vs_shadow_opaque->GetBufferPointer(), vs_shadow_opaque->GetBufferSize() };
     shadowCameraPsoDesc.PS = { ps_shadow_opaque->GetBufferPointer(), ps_shadow_opaque->GetBufferSize() };
 
+    D3D12_RASTERIZER_DESC rasterizerDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+    rasterizerDesc.DepthBias = 5000.0f;           // e.g. 1000
+    rasterizerDesc.DepthBiasClamp = 0.0f;
+    rasterizerDesc.SlopeScaledDepthBias = 4.0f;             // tweak this to reduce acne but avoid peter-panning
+    shadowCameraPsoDesc.RasterizerState = rasterizerDesc;
+
     ThrowIfFailed(device->CreateGraphicsPipelineState(&shadowCameraPsoDesc, IID_PPV_ARGS(&shadowPipelineState)));
 
 
@@ -1175,6 +1185,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             update_shadow_object(XMFLOAT3(-1.0f, 3.0f, 0.0f), -angle);
             CopyMemory(pCBVBytes[0], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[0]->GetGPUVirtualAddress());
+            
             commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
     
             // Shadow Draw Call #2
@@ -1182,6 +1193,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             update_shadow_object(XMFLOAT3(+1.0f, 3.0f, 0.0f), -angle);
             CopyMemory(pCBVBytes[1], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[1]->GetGPUVirtualAddress());
+
             commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
     
             // Shadow Draw Call #3
@@ -1190,7 +1202,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             update_shadow_object(XMFLOAT3(0.0f, 2.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
             CopyMemory(pCBVBytes[2], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[2]->GetGPUVirtualAddress());
-            commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
+
+            //commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
     
             // Shadow Draw Call #3
     
@@ -1280,17 +1293,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             commandList->IASetIndexBuffer(&quad_index_buffer_view);
     
             // Draw the quad off in center
-            update_world_matrix(XMFLOAT3(7.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
+            update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
             CopyMemory(pCBVBytes[6], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[6]->GetGPUVirtualAddress());
             commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
     
     
             // Draw the quad off to the right
-            update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
-            CopyMemory(pCBVBytes[5], &cBuffer, sizeof(cBuffer));
-            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[5]->GetGPUVirtualAddress());
-            commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
+            //update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
+            //CopyMemory(pCBVBytes[5], &cBuffer, sizeof(cBuffer));
+            //commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[5]->GetGPUVirtualAddress());
+            //commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
         }
     
         
@@ -1354,7 +1367,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
             CopyMemory(pCBVBytes[7], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[7]->GetGPUVirtualAddress());
-            commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+            commandList->DrawInstanced(6, 1, 0, 0);
+            //commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
         }
     
         

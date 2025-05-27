@@ -33,11 +33,12 @@ VertexOut VSMainOpaque(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOOR
 {
     VertexOut vOut;
 
-    float4 WorldP = mul(float4(p, 1.0f), World);
-
-    // Transform world space position into lights clip space
-    vOut.shadowPos = mul(WorldP, LightViewProj);
-    vOut.pos = WorldP;
+    //float4 WorldP = mul(float4(p, 1.0f), World);
+    //vOut.shadowPos = mul(float4(p, 1.0f), Model);
+    
+    float4 WorldPModel = mul(float4(p, 1.0f), Model); 
+    vOut.shadowPos = mul(WorldPModel, LightViewProj);
+    vOut.pos = mul(float4(p, 1.0f), World);
     vOut.col = c;
     vOut.uv = uv;
     vOut.pixelPos = mul(float4(p, 1.0f), Model);
@@ -46,49 +47,52 @@ VertexOut VSMainOpaque(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOOR
     return vOut;
 }
 
-VertexOut VSMainDepthCamera(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, float3 n : NORMAL)
+VertexOut VSMainDepthCamera(uint vertexID : SV_VertexID)
 {
-    VertexOut vOut;
+    // We don't really need a vertex buffer for this because we are drawing a simple quad with no World matrix.
 
-    float4 WorldP = float4(p, 1.0f);
+    float2 vertexInner = float2(0.5f, -0.5f);
+    float2 vertexOuter = float2(1.0f, -1.0f);
+    
+    float3 vertex_positions[] = {
+        float3(vertexInner.x, vertexInner.y, 0.0f),
+        float3(vertexOuter.x, vertexInner.y, 0.0f),
+        float3(vertexOuter.x, vertexOuter.y, 0.0f),
+        float3(vertexOuter.x, vertexOuter.y, 0.0f),
+        float3(vertexInner.x, vertexOuter.y, 0.0f),
+        float3(vertexInner.x, vertexInner.y, 0.0f),
+    };
 
-    vOut.pos = WorldP;
-    vOut.col = c;
-    vOut.uv = uv;
-    vOut.pixelPos = mul(float4(p, 1.0f), Model);
-    vOut.normal = normalize(mul(n, (float3x3) Model));
-
-    return vOut;
+    float2 uv_coords[] = {
+        float2(0.0f, 0.0f),
+        float2(1.0f, 0.0f),
+        float2(1.0f, 1.0f),
+        float2(1.0f, 1.0f),
+        float2(0.0f, 1.0f),
+        float2(0.0f, 0.0f),
+    
+    };
+    VertexOut vout;
+    vout.pos = float4(vertex_positions[vertexID], 1.0f);
+    vout.uv = uv_coords[vertexID];
+    
+    return vout;
 }
 
 VertexOut VSMainShadow(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, float3 n : NORMAL)
 {
     VertexOut vOut;
 
-    float4 WorldP = mul(float4(p, 1.0f), LightViewProj);
+    float4 WorldP = mul(float4(p, 1.0f), Model);
+    float4 lightP = mul(WorldP, LightViewProj);
 
     //vOut.worldP = WorldP;
-    vOut.pos = WorldP;
+    vOut.pos = lightP;
     vOut.col = c;
     vOut.uv = uv;
     vOut.pixelPos = mul(float4(p, 1.0f), Model);
+    vOut.shadowPos = mul(float4(p, 1.0f), Model);
     vOut.normal = normalize(mul(n, (float3x3) Model));
 
     return vOut;
 }
-
-
-    //float4 WorldPModel = mul(float4(p, 1.0f), Model);
-    //float4 WorldP = mul(WorldPModel, LightViewProj);
-    //float4 WorldP = mul(WorldPModel, LightViewProj); 
-    //float4 WorldP = mul(float4(p, 1.0f), LightViewProj);
-    //float4 LightP = mul(WorldP, LightViewProj);
-    //float4 LightP = mul(float4(p, 1.0f), LightViewProj);
-
-
-    //float4 WorldP = mul(float4(p, 1.0f), World);
-    //float4 WorldP = mul(float4(p, 1.0f), LightViewProj);
-    //float4 WorldP = mul(float4(p, 1.0f), Model);
-    //float4 WorldPos = mul(WorldP, LightViewProj);
-    //float4 WorldPLight = mul(float4(p, 1.0f), LightViewProj);
-    //float4 WorldP = mul(LightViewProj, float4(p, 1.0f));
