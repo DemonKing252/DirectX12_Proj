@@ -689,13 +689,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     depthStencilOnView.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
     depthStencilOnView.DepthEnable = true;
 
+    D3D12_DEPTH_STENCIL_DESC depthStencilShadowDesc;
+    ZeroMemory(&depthStencilShadowDesc, sizeof(D3D12_DEPTH_STENCIL_VIEW_DESC));
+
+    depthStencilShadowDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    depthStencilShadowDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+    depthStencilShadowDesc.DepthEnable = true;
+
+    /*
     D3D12_DEPTH_STENCIL_DESC depthStencilOffView;
     ZeroMemory(&depthStencilOffView, sizeof(D3D12_DEPTH_STENCIL_VIEW_DESC));
 
     depthStencilOffView.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
     depthStencilOffView.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
     depthStencilOffView.DepthEnable = false;
-
+    */
 
     /*****************************************************/
     // Shadow map resource
@@ -791,7 +799,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
         XMMATRIX lightView = XMMatrixLookAtLH(lightPos, sceneCenter, up);
-        XMMATRIX lightProjection = XMMatrixOrthographicOffCenterLH(-sceneRadius, sceneRadius, -sceneRadius, sceneRadius, 0.01f, 9.0f);
+        XMMATRIX lightProjection = XMMatrixOrthographicOffCenterLH(-sceneRadius, sceneRadius, -sceneRadius, sceneRadius, 0.01f, 50.0f);
 
         XMMATRIX lightViewProjection = lightProjection * lightView;
 
@@ -842,13 +850,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     commandQueue->ExecuteCommandLists(_countof(cmdLists), cmdLists);
 
     // Sync the CPU/GPU
-    UINT64 fenceValue = 0;
-    ThrowIfFailed(commandQueue->Signal(fence, fenceValue));
-    if (fence->GetCompletedValue() < fenceValue)
-    {
-        fence->SetEventOnCompletion(fenceValue, fenceEvt);
-        WaitForSingleObject(fenceEvt, INFINITE);
-    }
 
 
     // step 2: shader resource view:
@@ -1063,11 +1064,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     opaquePsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     shadowCameraPsoDesc.VS = { vs_shadow_opaque->GetBufferPointer(), vs_shadow_opaque->GetBufferSize() };
     shadowCameraPsoDesc.PS = { ps_shadow_opaque->GetBufferPointer(), ps_shadow_opaque->GetBufferSize() };
+    shadowCameraPsoDesc.DepthStencilState = depthStencilShadowDesc;
 
     D3D12_RASTERIZER_DESC rasterizerDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-    rasterizerDesc.DepthBias = 5000.0f;           // e.g. 1000
+    rasterizerDesc.DepthBias = 800000;           // e.g. 1000
     rasterizerDesc.DepthBiasClamp = 0.0f;
-    rasterizerDesc.SlopeScaledDepthBias = 4.0f;             // tweak this to reduce acne but avoid peter-panning
+    rasterizerDesc.SlopeScaledDepthBias = 8.0f;             // tweak this to reduce acne but avoid peter-panning
+    rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+    rasterizerDesc.FrontCounterClockwise = FALSE;
+    rasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
     shadowCameraPsoDesc.RasterizerState = rasterizerDesc;
 
     ThrowIfFailed(device->CreateGraphicsPipelineState(&shadowCameraPsoDesc, IID_PPV_ARGS(&shadowPipelineState)));
@@ -1095,6 +1100,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     IDXGISwapChain3* swapChain3 = nullptr;
     float angle = 0.f;
     eyePos = XMVectorSet(0.0f, +3.0f, -6.0f, 0.0f);
+    UINT64 fenceValue = 0;
     // Main message loop:
     //while (msg.message != WM_QUIT)
     while (msg.message != WM_QUIT)
@@ -1156,18 +1162,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     
         if (1)
         {
+            // Resource Transition
+            commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+                shadowMapResource.Get(),
+                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,  // from
+                D3D12_RESOURCE_STATE_DEPTH_WRITE));          // to
+
             // -------------------------- Pipeline States --------------------------
             
             // Set pipeline state to shadow Pipeline
             commandList->SetPipelineState(shadowPipelineState);
     
             // Bind the RTV and Shadow Depth Buffer
-            auto depth_heap_start = shadowDSVHeap->GetCPUDescriptorHandleForHeapStart();
-            commandList->OMSetRenderTargets(0, nullptr, FALSE, &depth_heap_start);
+            commandList->OMSetRenderTargets(0, nullptr, FALSE, &shadowDSVHeap->GetCPUDescriptorHandleForHeapStart());
     
             // Clear RTV and Depth Buffer
             //commandList->ClearRenderTargetView(rtvHandle, clear_color, 0, nullptr);
-            commandList->ClearDepthStencilView(depth_heap_start, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+            commandList->ClearDepthStencilView(shadowDSVHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
             commandList->SetDescriptorHeaps(1, &textureDescriptorHeap);
             commandList->SetGraphicsRootDescriptorTable(1, textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
@@ -1190,7 +1201,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     
             // Shadow Draw Call #2
             commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-            update_shadow_object(XMFLOAT3(+1.0f, 3.0f, 0.0f), -angle);
+            update_shadow_object(XMFLOAT3(+1.0f, 3.0f, 0.0f), angle);
             CopyMemory(pCBVBytes[1], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[1]->GetGPUVirtualAddress());
 
@@ -1203,16 +1214,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             CopyMemory(pCBVBytes[2], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[2]->GetGPUVirtualAddress());
 
-            //commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
+            commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
     
             // Shadow Draw Call #3
     
-    
-    
-            // Swap Vertex buffers and Index buffers, we are drawing a quad:
-    
-            //commandList->SetDescriptorHeaps(1, &depthStencilSRVHeap);
-            //commandList->SetGraphicsRootDescriptorTable(2, depthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
+            // Resource Barrier
+            commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+                shadowMapResource.Get(),
+                D3D12_RESOURCE_STATE_DEPTH_WRITE,            // from
+                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)); // to
         }
     
     
@@ -1223,13 +1233,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         {
             commandList->SetPipelineState(opaquePipelineState);
     
-            auto depth_heap_start = depthDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
     
             commandList->ClearRenderTargetView(rtvHandle, clear_color, 0, nullptr);
     
             // get the current back buffer resource heap, and set it to the render target
-            commandList->OMSetRenderTargets(1, nullptr, FALSE, &depth_heap_start);
-            commandList->ClearDepthStencilView(depth_heap_start, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+            commandList->OMSetRenderTargets(1, nullptr, FALSE, &depthDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+            commandList->ClearDepthStencilView(depthDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
     
     
     
