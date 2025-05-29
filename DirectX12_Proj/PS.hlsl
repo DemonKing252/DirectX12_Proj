@@ -78,40 +78,31 @@ float ShadowCalculation(float4 shadowPos)
     
     //float shadow = shadowMapFloat.SampleCmp(shadowSampl, shadowTexCoords, currentDepth - bias);
     
-    //float shadowDepth = shadowMapFloat.Sample(texSampl, shadowTexCoords).r;
+    float shadowDepthRaw = shadowMapFloat.Sample(texSampl, shadowTexCoords).r;
     float shadowDepth = shadowMapFloat.SampleCmp(shadowSampl, shadowTexCoords, currentDepth - bias);
     //float shadowDepth = shadowMapFloat.SampleCmpLevelZero(shadowSampl, shadowTexCoords, currentDepth - bias);
 
     
-    //float shadow = 1.0f;
-    float shadow = currentDepth - bias > shadowDepth ? 0.2f : 1.0f;
+    float shadow = (currentDepth - bias > shadowDepth) ? 0.2f : 1.0f;
+    //float shadow = (shadowDepthRaw < 20.0f / 255.0f) ? 0.2f : 1.0f;
     
     // shadow is 1 if lit, 0 if in shadow, no manual comparison needed here
 
-    return shadowDepth;
+    return shadow;
 }
-
-float4 PSMainOpaque(VertexIn vIn) : SV_TARGET
+float3 ComputeLighting(float3 normal, float3 pixelPos)
 {
-    // Use texturing
-
-    float3 texUV = tex.Sample(texSampl, vIn.uv).xyz;
-
-    // Use vertex colors
-    float3 coloredtexUV = (float4(vIn.col, 1.0f) * texUV).xyz;
-
-    float3 coloredPixel = vIn.col;
-
     float3 ambientLight = float3(0.2f, 0.2f, 0.2f);
-
+    
     // point light
     //float3 pixelToLight = normalize(directionalLight.Position - vIn.pixelPos);
 
     // directional light
     float3 pixelToLight = -directionalLight.Direction;
 
-    float diffuse = saturate(max(dot(vIn.normal, pixelToLight), 0.0)) * 0.7f;
-    float dist = length(directionalLight.Position - vIn.pixelPos);
+    
+    float diffuse = saturate(max(dot(normal, pixelToLight), 0.0)) * 0.7f;
+    float dist = length(directionalLight.Position - pixelPos);
     float falloffstart = 0.01f;
     float falloffend = 3.0f;
 
@@ -121,38 +112,54 @@ float4 PSMainOpaque(VertexIn vIn) : SV_TARGET
 
 
     // Pixel ---> Camera
-    float3 viewDir = normalize(CameraPosition.xyz - vIn.pixelPos);
+    float3 viewDir = normalize(CameraPosition.xyz - pixelPos);
 
     // Reflect:
     // Pixel ---> Camera
     // Normal face ----->
-    float3 reflectedDir = normalize(reflect(-pixelToLight, vIn.normal));
+    float3 reflectedDir = normalize(reflect(-pixelToLight, normal));
     
-    float3 specular = saturate(pow(max(dot(reflectedDir, viewDir), 0.0f), 128));
+    float3 specular = saturate(pow(max(dot(reflectedDir, viewDir), 0.0f), 32));
 
-    float3 sampledTexture = (ambientLight + diffuse + specular); // use saturate to clamp between 0.0 and 1.0
-    sampledTexture *= texUV;
+    float3 totalLight = (ambientLight + diffuse + specular); // use saturate to clamp between 0.0 and 1.0
+    
+    return totalLight;
+}
+
+float4 PSMainOpaque(VertexIn vIn) : SV_TARGET
+{
+    // Use texturing
+
+    float3 texUV = tex.Sample(texSampl, vIn.uv).xyz;
+
+    // Use vertex colors
+    //float3 coloredtexUV = (float4(vIn.col, 1.0f) * texUV).xyz;
+    //float3 coloredPixel = vIn.col;
 
     
-    float shadowFactor = ShadowCalculation(vIn.shadowPos);
+ 
+    
     //shadowFactor = (shadowFactor < 0.15f ? 0.2f : 1.0f);
     //shadowFactor = max(shadowFactor, 0.2f);
     
     //shadowFactor = (vIn.shadowPos > 2.5f && vIn.shadowPos < 3.0f ? 1.0f : 0.2f);
     //return float4(texUV, 1.0f);
+    float3 sampledTexture = ComputeLighting(vIn.normal, vIn.pixelPos) * texUV * 0.3f;
     
-    float3 finalComputePixelColor = (shadowFactor < 0.5f ? 0.3f * texUV : sampledTexture);
+    //float3 finalComputePixelColor = (shadowFactor < 0.5f ? 0.3f * texUV : sampledTexture);
     //float3 finalComputePixelColor = shadowFactor * sampledTexture;
     
     //finalComputePixelColor = float3(shadowFactor, shadowFactor, shadowFactor) * sampledTexture;
-    float3 finalShadow;
-    if (shadowFactor < (19.0f / 255.0f))
-        finalShadow = float3(0.2, 0.2f, 0.2f);
-    else
-        finalShadow = float3(1.0f, 1.0f, 1.0f);
+    //float3 finalShadow;
+    //if (shadowFactor < (19.0f / 255.0f))
+    //    finalShadow = float3(0.2, 0.2f, 0.2f);
+    //else
+    //    finalShadow = float3(1.0f, 1.0f, 1.0f);
     
     
-    return float4(shadowFactor * texUV, 1.0f);
+    float shadowFactor = ShadowCalculation(vIn.shadowPos) * float3(1.0f, 1.0f, 1.0f);
+    
+    return float4(shadowFactor * sampledTexture, 1.0f);
 }
 
 float4 PSMainDepthCamera(VertexIn vIn) : SV_TARGET
@@ -161,15 +168,24 @@ float4 PSMainDepthCamera(VertexIn vIn) : SV_TARGET
     float depthValue = shadowMapFloat.Sample(texSampl, vIn.uv).r;
     //depthValue = pow(depthValue, 4);
 
+    //return 1.0f;
     return float4(depthValue.xxx, 1.0f);
 }
 
-float4 PSMainShadow(VertexIn vIn) : SV_TARGET
+float PSMainShadow(VertexIn vIn) : SV_Depth
 {
-    // Use texturing
-    //float depth = shadowMap.Sample(texSampl, vIn.uv).r;
-    
-    float4 texUV = tex.Sample(texSampl, vIn.uv);
-    //depth = pow(depth, 50);
-    return float4(texUV.xyz, 1.0f);
+    return vIn.shadowPos.z / vIn.shadowPos.w;
+}
+
+/*
+float4 PSMainShadow(VertexIn vIn) : SV_Target
+{
+    float4 depthValue = shadowMap.Sample(texSampl, vIn.uv).r;
+    return float4(depthValue.xxx, 1.0f);
+}
+*/
+
+float4 PSMainOutline(VertexIn vIn) : SV_TARGET
+{
+    return float4(1.0f, 0.7f, 0.0f, 1.0f);
 }

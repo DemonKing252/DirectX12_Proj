@@ -11,7 +11,6 @@ struct VertexOut
 
 struct Light
 {
-
     float3 Position;
     float FallOffStart;
     float3 Direction;
@@ -32,9 +31,6 @@ cbuffer ConstantBuffer : register(b0)
 VertexOut VSMainOpaque(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, float3 n : NORMAL)
 {
     VertexOut vOut;
-
-    //float4 WorldP = mul(float4(p, 1.0f), World);
-    //vOut.shadowPos = mul(float4(p, 1.0f), Model);
     
     float4 WorldPModel = mul(float4(p, 1.0f), Model); 
     vOut.shadowPos = mul(WorldPModel, LightViewProj);
@@ -46,7 +42,8 @@ VertexOut VSMainOpaque(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOOR
 
     return vOut;
 }
-
+//float4 WorldP = mul(float4(p, 1.0f), World);
+//vOut.shadowPos = mul(float4(p, 1.0f), Model);
 VertexOut VSMainDepthCamera(uint vertexID : SV_VertexID)
 {
     // We don't really need a vertex buffer for this because we are drawing a simple quad with no World matrix.
@@ -73,6 +70,7 @@ VertexOut VSMainDepthCamera(uint vertexID : SV_VertexID)
     
     };
     VertexOut vout;
+    vout.shadowPos = float4(vertex_positions[vertexID], 1.0f);
     vout.pos = float4(vertex_positions[vertexID], 1.0f);
     vout.uv = uv_coords[vertexID];
     
@@ -92,6 +90,21 @@ VertexOut VSMainShadow(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOOR
     vOut.uv = uv;
     vOut.pixelPos = mul(float4(p, 1.0f), Model);
     vOut.shadowPos = mul(float4(p, 1.0f), Model);
+    vOut.normal = normalize(mul(n, (float3x3) Model));
+
+    return vOut;
+}
+
+VertexOut VSMainOutline(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, float3 n : NORMAL)
+{
+    VertexOut vOut;
+    
+    float4 WorldPModel = mul(float4(p, 1.0f), Model);
+    vOut.shadowPos = mul(WorldPModel, LightViewProj);
+    vOut.pos = mul(float4(p, 1.0f), World);
+    vOut.col = c;
+    vOut.uv = uv;
+    vOut.pixelPos = mul(float4(p, 1.0f), Model);
     vOut.normal = normalize(mul(n, (float3x3) Model));
 
     return vOut;
