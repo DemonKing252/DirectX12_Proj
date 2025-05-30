@@ -33,7 +33,6 @@ SamplerComparisonState shadowSampl : register(s1);
 Texture2D tex : register(t0);
 Texture2D<float> depth : register(t1);
 Texture2D<float> shadowMap : register(t2);
-Texture2D<float> shadowMapFloat : register(t3);
 
 /*
 float ShadowCalculation(float4 shadowPos)
@@ -57,7 +56,7 @@ float ShadowCalculation(float4 shadowPos)
 }
 */
 
-float ShadowCalculation(float4 shadowPos)
+float4 ShadowCalculation(float4 shadowPos)
 {
     // Perform perspective divide (clip space -> NDC)
     float3 projCoords = shadowPos.xyz / shadowPos.w;
@@ -78,17 +77,30 @@ float ShadowCalculation(float4 shadowPos)
     
     //float shadow = shadowMapFloat.SampleCmp(shadowSampl, shadowTexCoords, currentDepth - bias);
     
-    float shadowDepthRaw = shadowMapFloat.Sample(texSampl, shadowTexCoords).r;
-    float shadowDepth = shadowMapFloat.SampleCmp(shadowSampl, shadowTexCoords, currentDepth - bias);
-    //float shadowDepth = shadowMapFloat.SampleCmpLevelZero(shadowSampl, shadowTexCoords, currentDepth - bias);
+    float far = 15.0f;
+    float near = 0.01f;
+    
+    float rawDepth = shadowMap.Sample(texSampl, shadowTexCoords).r;
+    //float z = rawDepth * 2.0 - 1.0; // NDC space
+    //float linearDepth = (2.0 * near * far) / (far + near - z * (far - near));
+    //return float4(linearDepth.xxx, 1.0f);
+    
+    //float shadowDepth = shadowMap.SampleCmp(shadowSampl, shadowTexCoords, currentDepth - bias);
+    //float shadowDepth = shadowMapFloat.SampleCmpLevelZero(shadowSampl, shadowTexCoords, saturate(currentDepth - bias)).r;
+    
+    float depthFromShadowMap = shadowMap.SampleLevel(texSampl, shadowTexCoords, 0).r;
+    float shadow = shadowMap.SampleCmpLevelZero(shadowSampl, shadowTexCoords, currentDepth - bias);
+    float depthDelta = currentDepth - depthFromShadowMap;
+    //rawDepth = shadowMap.SampleCmpLevelZero(shadowSampl, shadowTexCoords, currentDepth).r;
 
     
-    float shadow = (currentDepth - bias > shadowDepth) ? 0.2f : 1.0f;
+    //float shadow = (currentDepth - bias > shadowDepth) ? 0.2f : 1.0f;
+    
     //float shadow = (shadowDepthRaw < 20.0f / 255.0f) ? 0.2f : 1.0f;
     
     // shadow is 1 if lit, 0 if in shadow, no manual comparison needed here
 
-    return shadow;
+    return float4(shadow.xxx, 1.0f);
 }
 float3 ComputeLighting(float3 normal, float3 pixelPos)
 {
@@ -157,33 +169,38 @@ float4 PSMainOpaque(VertexIn vIn) : SV_TARGET
     //    finalShadow = float3(1.0f, 1.0f, 1.0f);
     
     
-    float shadowFactor = ShadowCalculation(vIn.shadowPos) * float3(1.0f, 1.0f, 1.0f);
+    //float shadowFactor = ShadowCalculation(vIn.shadowPos) * float3(1.0f, 1.0f, 1.0f);
     
-    return float4(shadowFactor * sampledTexture, 1.0f);
+    return ShadowCalculation(vIn.shadowPos);
 }
 
 float4 PSMainDepthCamera(VertexIn vIn) : SV_TARGET
 {
     // Use texturing
-    float depthValue = shadowMapFloat.Sample(texSampl, vIn.uv).r;
+    float depthValue = shadowMap.Sample(texSampl, vIn.uv).r;
+    
+    float depth = shadowMap.SampleCmpLevelZero(shadowSampl, vIn.uv, 0.5f);
+    
     //depthValue = pow(depthValue, 4);
 
     //return 1.0f;
     return float4(depthValue.xxx, 1.0f);
 }
 
+
 float PSMainShadow(VertexIn vIn) : SV_Depth
 {
     return vIn.shadowPos.z / vIn.shadowPos.w;
 }
 
-/*
-float4 PSMainShadow(VertexIn vIn) : SV_Target
-{
-    float4 depthValue = shadowMap.Sample(texSampl, vIn.uv).r;
-    return float4(depthValue.xxx, 1.0f);
-}
-*/
+
+
+//float4 PSMainShadow(VertexIn vIn) : SV_Target
+//{
+//    float4 depthValue = shadowMap.Sample(texSampl, vIn.uv).r;
+//    return float4(depthValue.xxx, 1.0f);
+//}
+
 
 float4 PSMainOutline(VertexIn vIn) : SV_TARGET
 {

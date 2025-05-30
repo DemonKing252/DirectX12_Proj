@@ -32,8 +32,10 @@ VertexOut VSMainOpaque(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOOR
 {
     VertexOut vOut;
     
-    float4 WorldPModel = mul(float4(p, 1.0f), Model); 
-    vOut.shadowPos = mul(WorldPModel, LightViewProj);
+    float4 WorldP = mul(float4(p, 1.0f), World);
+    float4 ModelP = mul(float4(p, 1.0f), Model);
+    
+    vOut.shadowPos = mul(ModelP, LightViewProj);
     vOut.pos = mul(float4(p, 1.0f), World);
     vOut.col = c;
     vOut.uv = uv;
@@ -81,17 +83,18 @@ VertexOut VSMainShadow(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOOR
 {
     VertexOut vOut;
 
-    float4 WorldP = mul(float4(p, 1.0f), Model);
-    float4 lightP = mul(WorldP, LightViewProj);
+    float4 WorldP = mul(float4(p, 1.0f), World);
+    float4 ModelP = mul(float4(p, 1.0f), Model);
+    float4 lightP = mul(ModelP, LightViewProj);
 
     //vOut.worldP = WorldP;
     vOut.pos = lightP;
     vOut.col = c;
     vOut.uv = uv;
     vOut.pixelPos = mul(float4(p, 1.0f), Model);
-    vOut.shadowPos = mul(float4(p, 1.0f), Model);
+    vOut.shadowPos = lightP;
     vOut.normal = normalize(mul(n, (float3x3) Model));
-
+    //vOut.shadowPos = mul(float4(p, 1.0f), Model);
     return vOut;
 }
 
