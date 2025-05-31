@@ -83,9 +83,15 @@ VertexOut VSMainShadow(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOOR
 {
     VertexOut vOut;
 
+    float4 WorldP = mul(World, float4(p, 1.0f)); // Model * position
+    float4 ModelP = mul(Model, float4(p, 1.0f)); // (if you use Model separately)
+    float4 lightP = mul(LightViewProj, ModelP); // LightViewProj * ModelP
+    
+    /*
     float4 WorldP = mul(float4(p, 1.0f), World);
     float4 ModelP = mul(float4(p, 1.0f), Model);
     float4 lightP = mul(ModelP, LightViewProj);
+    */
 
     //vOut.worldP = WorldP;
     vOut.pos = lightP;

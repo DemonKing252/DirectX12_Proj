@@ -747,7 +747,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
 
     //XMFLOAT4(0.0f, 4.0f, 4.0f, 1.0f)
-    float dist = 6.0f;
+    float dist = 7.0f;
     cBuffer.directionalLight.Position = XMFLOAT3(0.0f, dist, -dist);
     // Light Projection
     auto update_shadow_object = [&](XMFLOAT3 Translate, float Rotation, XMFLOAT3 Scale = XMFLOAT3(1.0f, 1.0f, 1.0f))
@@ -758,18 +758,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         // cBuffer.directionalLight.Direction = XMFLOAT3(0.0f, -1.0f, -1.0f);
 
         XMVECTOR lightDir = XMVector3Normalize(XMVectorSet(cBuffer.directionalLight.Direction.x, cBuffer.directionalLight.Direction.y, cBuffer.directionalLight.Direction.z, 0.0f)); // Directional light pointing diagonally
-        XMVECTOR sceneCenter = XMVectorSet(0, 0, 0, 1);
+        XMVECTOR sceneCenter = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         float distanceBack = 10.0f; // How far back the light camera is placed
         float sceneRadius = 8.0f;
 
         XMFLOAT4 LightP = XMFLOAT4(cBuffer.directionalLight.Position.x, cBuffer.directionalLight.Position.y, cBuffer.directionalLight.Position.z, 1.0f);
         //XMFLOAT4 LightP = XMFLOAT4(0.0f, 4.0f, 4.0f, 1.0f);
-        XMVECTOR lightPos = XMLoadFloat4(&LightP);
-        //XMVECTOR lightPos = (sceneCenter - lightDir) * distanceBack;
+        
+        XMVECTOR lightPos = XMLoadFloat4(&LightP);       
+        XMVECTOR lightDirection = XMVector3Normalize(sceneCenter - lightPos);   
+        XMStoreFloat3(&cBuffer.directionalLight.Direction, lightDirection);
+        
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
         XMMATRIX lightView = XMMatrixLookAtLH(lightPos, sceneCenter, up);
-        XMMATRIX lightProjection = XMMatrixOrthographicOffCenterLH(-sceneRadius, sceneRadius, -sceneRadius, sceneRadius, 0.01f, 15.0f);
+        XMMATRIX lightProjection = XMMatrixOrthographicOffCenterLH(-sceneRadius, sceneRadius, -sceneRadius, sceneRadius, 0.01f, 40.0f);
 
         XMMATRIX lightViewProjection = lightProjection * lightView;
 
@@ -787,8 +790,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         cBuffer.World = XMMatrixTranspose(model * view * proj);
 
 
-        cBuffer.LightViewProj = XMMatrixTranspose(lightView * lightProjection);
-        //cBuffer.LightViewProj = XMMatrixTranspose(lightProjection * lightView);
+        //cBuffer.LightViewProj = XMMatrixTranspose(lightView * lightProjection);
+        cBuffer.LightViewProj = XMMatrixTranspose(lightProjection * lightView);
 
     };
     //float angle = 0.0f;
@@ -1338,7 +1341,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
             // Shadow Draw Call #1
             commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-            update_shadow_object(XMFLOAT3(-1.0f, 3.0f, 0.0f), -angle);
+            update_shadow_object(XMFLOAT3(-1.0f, 2.f, 0.0f), angle);
             CopyMemory(pCBVBytes[0], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[0]->GetGPUVirtualAddress());
             
@@ -1346,7 +1349,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     
             // Shadow Draw Call #2
             commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-            update_shadow_object(XMFLOAT3(+1.0f, 3.0f, 0.0f), +angle);
+            update_shadow_object(XMFLOAT3(+1.0f, 2.f, 0.0f), angle);
             CopyMemory(pCBVBytes[1], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[1]->GetGPUVirtualAddress());
 
@@ -1437,7 +1440,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             // Draw Call #2
             commandList->OMSetStencilRef(1);
             commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-            update_world_matrix(XMFLOAT3(-1.0f, 1.0f, 0.0f), angle);
+            update_world_matrix(XMFLOAT3(-1.0f, 2.0f, 0.0f), angle);
             CopyMemory(pCBVBytes[4], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[4]->GetGPUVirtualAddress());
             commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
@@ -1445,7 +1448,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             // Draw Call #3
             commandList->OMSetStencilRef(2);
             commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-            update_world_matrix(XMFLOAT3(+1.0f, 1.0f, 0.0f), -angle);
+            update_world_matrix(XMFLOAT3(+1.0f, 2.0f, 0.0f), -angle);
             CopyMemory(pCBVBytes[5], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[5]->GetGPUVirtualAddress());
             commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
@@ -1456,7 +1459,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             
             // Draw Call #4
             commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-            update_world_matrix(XMFLOAT3(-1.0f, 1.0f, 0.0f), angle, XMFLOAT3(1.1f, 1.1f, 1.1f));
+            update_world_matrix(XMFLOAT3(-1.0f, 2.f, 0.0f), angle, XMFLOAT3(1.1f, 1.1f, 1.1f));
             CopyMemory(pCBVBytes[6], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[6]->GetGPUVirtualAddress());
             commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
@@ -1465,9 +1468,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
             // Draw Call #4
             commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-            update_world_matrix(XMFLOAT3(+1.0f, 1.0f, 0.0f), -angle, XMFLOAT3(1.1f, 1.1f, 1.1f));
+            update_world_matrix(XMFLOAT3(+1.0f, 2.f, 0.0f), -angle, XMFLOAT3(1.1f, 1.1f, 1.1f));
             CopyMemory(pCBVBytes[7], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[7]->GetGPUVirtualAddress());
+            commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
+
+            commandList->SetPipelineState(opaquePipelineState);
+
+            // Draw Call #5 - Debug Light Position
+            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            update_world_matrix(cBuffer.directionalLight.Position, 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
+            CopyMemory(pCBVBytes[8], &cBuffer, sizeof(cBuffer));
+            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[8]->GetGPUVirtualAddress());
             commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
 
             // ------------------------------------------------------ Draw Quad --------------------------------------------------------
@@ -1484,8 +1496,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     
             // Draw the quad that's used to show the shadow map
             update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
-            CopyMemory(pCBVBytes[8], &cBuffer, sizeof(cBuffer));
-            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[8]->GetGPUVirtualAddress());
+            CopyMemory(pCBVBytes[9], &cBuffer, sizeof(cBuffer));
+            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[9]->GetGPUVirtualAddress());
             commandList->DrawInstanced(6, 1, 0, 0);
             //commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
         }

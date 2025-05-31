@@ -171,7 +171,7 @@ float4 PSMainOpaque(VertexIn vIn) : SV_TARGET
     
     float shadowFactor = ShadowCalculation(vIn.shadowPos);
     
-    return float4(sampledTexture * shadowFactor.xxx, 1.0f);
+    return float4(texUV * shadowFactor.xxx, 1.0f);
 }
 
 float4 PSMainDepthCamera(VertexIn vIn) : SV_TARGET
