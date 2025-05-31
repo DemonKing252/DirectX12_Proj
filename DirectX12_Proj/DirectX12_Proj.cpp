@@ -43,6 +43,7 @@ struct ConstantBuffer
     XMMATRIX Model;
     XMMATRIX World;
     XMMATRIX LightViewProj;
+    XMMATRIX PerspectiveViewProj;
     Light directionalLight;
     XMFLOAT4 CameraPosition;
 };
@@ -684,8 +685,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
         depthDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
         depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-        depthDesc.Width = 1920;
-        depthDesc.Height = 1080;
+        depthDesc.Width = 2048;
+        depthDesc.Height = 2048;
         depthDesc.MipLevels = 1;
         depthDesc.DepthOrArraySize = 1;
         depthDesc.SampleDesc.Count = 1;
@@ -757,10 +758,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
         // cBuffer.directionalLight.Direction = XMFLOAT3(0.0f, -1.0f, -1.0f);
 
-        XMVECTOR lightDir = XMVector3Normalize(XMVectorSet(cBuffer.directionalLight.Direction.x, cBuffer.directionalLight.Direction.y, cBuffer.directionalLight.Direction.z, 0.0f)); // Directional light pointing diagonally
+        //XMVECTOR lightDir = XMVector3Normalize(XMVectorSet(cBuffer.directionalLight.Direction.x, cBuffer.directionalLight.Direction.y, cBuffer.directionalLight.Direction.z, 0.0f)); // Directional light pointing diagonally
         XMVECTOR sceneCenter = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         float distanceBack = 10.0f; // How far back the light camera is placed
-        float sceneRadius = 8.0f;
+        float sceneRadius = 4.0f;
 
         XMFLOAT4 LightP = XMFLOAT4(cBuffer.directionalLight.Position.x, cBuffer.directionalLight.Position.y, cBuffer.directionalLight.Position.z, 1.0f);
         //XMFLOAT4 LightP = XMFLOAT4(0.0f, 4.0f, 4.0f, 1.0f);
@@ -772,9 +773,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
         XMMATRIX lightView = XMMatrixLookAtLH(lightPos, sceneCenter, up);
+
+        // Correct:
         XMMATRIX lightProjection = XMMatrixOrthographicOffCenterLH(-sceneRadius, sceneRadius, -sceneRadius, sceneRadius, 0.01f, 40.0f);
 
-        XMMATRIX lightViewProjection = lightProjection * lightView;
+        //XMMATRIX lightViewProjection = lightProjection * lightView;
 
         XMMATRIX scale = XMMatrixScaling(Scale.x, Scale.y, Scale.z);
         XMMATRIX rotation = XMMatrixRotationRollPitchYaw(XMConvertToRadians(0.0f), XMConvertToRadians(Rotation), XMConvertToRadians(0.0f));
@@ -790,8 +793,28 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         cBuffer.World = XMMatrixTranspose(model * view * proj);
 
 
-        //cBuffer.LightViewProj = XMMatrixTranspose(lightView * lightProjection);
-        cBuffer.LightViewProj = XMMatrixTranspose(lightProjection * lightView);
+        
+        XMMATRIX T(
+        0.5f, 0.0f, 0.0f, 0.0f,
+        0.0f, -0.5f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.0f, 1.0f);
+        //XMMATRIX T(
+        //    1.0f, 0.0f, 0.0f, 0.0f,
+        //    0.0f, -1.0f, 0.0f, 0.0f,
+        //    0.0f, 0.0f, 1.0f, 0.0f,
+        //    1.0f, 1.0f, 0.0f, 1.0f);
+
+        XMMATRIX viewProj = lightView * lightProjection;
+
+        cBuffer.LightViewProj = XMMatrixTranspose(lightView * lightProjection);
+        //cBuffer.LightViewProj = XMMatrixTranspose(lightProjection * lightView * T);
+        //cBuffer.LightViewProj = XMMatrixTranspose(XMMatrixMultiply(view, proj));
+        
+        //cBuffer.LightViewProj = XMMatrixTranspose(lightProjection * lightView);
+        //cBuffer.LightViewProj = XMMatrixTranspose(lightView*lightProjection*T);
+        //cBuffer.PerspectiveViewProj = XMMatrixTranspose(XMMatrixMultiply(view, proj));
+
 
     };
     //float angle = 0.0f;
@@ -826,7 +849,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         XMStoreFloat4(&cBuffer.CameraPosition, eyePos);
 
         cBuffer.Model = XMMatrixTranspose(model);
-        cBuffer.World = XMMatrixTranspose(model * view * proj);
+        //cBuffer.World = XMMatrixTranspose(model * view * proj);
+
+        //cBuffer.PerspectiveViewProj = XMMatrixTranspose(XMMatrixMultiply(view, proj));
+        cBuffer.PerspectiveViewProj = XMMatrixTranspose(XMMatrixMultiply(view, proj));
         //cBuffer.Proj = proj;
         //cBuffer.View = view;
         //cBuffer.Model = model;

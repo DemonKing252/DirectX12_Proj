@@ -23,6 +23,7 @@ cbuffer ConstantBuffer : register(b0)
     float4x4 Model;
     float4x4 World;
     float4x4 LightViewProj;
+    float4x4 PerspectiveViewProj;
     Light directionalLight;
     float4 CameraPosition;
 }
@@ -59,13 +60,15 @@ float ShadowCalculation(float4 shadowPos)
 float4 ShadowCalculation(float4 shadowPos)
 {
     // Perform perspective divide (clip space -> NDC)
-    float3 projCoords = shadowPos.xyz / shadowPos.w;
-
+    shadowPos.xyz /= shadowPos.w;
+    float depth = shadowPos.z;
+    
     // Transform NDC from [-1,1] to [0,1]
-    float2 shadowTexCoords = projCoords.xy * 0.5f + 0.5f;
+    float2 shadowTexCoords = shadowPos.xy * 0.5f + 0.5f;
 
     // Depth in light space [0,1]
-    float currentDepth = projCoords.z * 0.5f + 0.5f;
+    
+    float currentDepth = shadowPos.z * 0.5f + 0.5f;
 
     // Early exit if outside shadow map bounds (optional)
     
@@ -85,7 +88,8 @@ float4 ShadowCalculation(float4 shadowPos)
     //float linearDepth = (2.0 * near * far) / (far + near - z * (far - near));
     //return float4(linearDepth.xxx, 1.0f);
     
-    float shadowDepth = shadowMap.SampleCmp(shadowSampl, shadowTexCoords, currentDepth - bias);
+    float shadow = shadowMap.SampleCmpLevelZero(shadowSampl, shadowPos.xy, depth).r;
+    //float shadowDepth = shadowMap.SampleCmp(shadowSampl, shadowPos.xy, currentDepth - bias);
     //float shadowDepth = shadowMapFloat.SampleCmpLevelZero(shadowSampl, shadowTexCoords, saturate(currentDepth - bias)).r;
     
     //float depthFromShadowMap = shadowMap.SampleLevel(texSampl, shadowTexCoords, 0).r;
@@ -100,7 +104,7 @@ float4 ShadowCalculation(float4 shadowPos)
     
     // shadow is 1 if lit, 0 if in shadow, no manual comparison needed here
 
-    return float4(rawDepth.xxx, 1.0f);
+    return float4(shadow.xxx, 1.0f);
 }
 float3 ComputeLighting(float3 normal, float3 pixelPos)
 {

@@ -24,6 +24,7 @@ cbuffer ConstantBuffer : register(b0)
     float4x4 Model;
     float4x4 World;
     float4x4 LightViewProj;
+    float4x4 PerspectiveViewProj;
     Light directionalLight;
     float4 CameraPosition;
 }
@@ -32,11 +33,12 @@ VertexOut VSMainOpaque(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOOR
 {
     VertexOut vOut;
     
-    float4 WorldP = mul(float4(p, 1.0f), World);
+    //float4 WorldP = mul(float4(p, 1.0f), World);
     float4 ModelP = mul(float4(p, 1.0f), Model);
     
     vOut.shadowPos = mul(ModelP, LightViewProj);
-    vOut.pos = mul(float4(p, 1.0f), World);
+    vOut.pos = mul(ModelP, PerspectiveViewProj);
+    
     vOut.col = c;
     vOut.uv = uv;
     vOut.pixelPos = mul(float4(p, 1.0f), Model);
@@ -82,10 +84,11 @@ VertexOut VSMainDepthCamera(uint vertexID : SV_VertexID)
 VertexOut VSMainShadow(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, float3 n : NORMAL)
 {
     VertexOut vOut;
-
-    float4 WorldP = mul(World, float4(p, 1.0f)); // Model * position
-    float4 ModelP = mul(Model, float4(p, 1.0f)); // (if you use Model separately)
-    float4 lightP = mul(LightViewProj, ModelP); // LightViewProj * ModelP
+    
+    //float4 ModelP = mul(float4(p, 1.0f), Model);
+    //float4 WorldP = mul(World, float4(p, 1.0f)); // Model * position
+    float4 ModelP = mul(float4(p, 1.0f), Model); // (if you use Model separately)
+    //float4 lightP = mul(float4(p, 1.0f), LightViewProj); // LightViewProj * ModelP
     
     /*
     float4 WorldP = mul(float4(p, 1.0f), World);
@@ -94,11 +97,11 @@ VertexOut VSMainShadow(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOOR
     */
 
     //vOut.worldP = WorldP;
-    vOut.pos = lightP;
+    vOut.pos = mul(ModelP, LightViewProj);
     vOut.col = c;
     vOut.uv = uv;
     vOut.pixelPos = mul(float4(p, 1.0f), Model);
-    vOut.shadowPos = lightP;
+    vOut.shadowPos = mul(ModelP, LightViewProj);
     vOut.normal = normalize(mul(n, (float3x3) Model));
     //vOut.shadowPos = mul(float4(p, 1.0f), Model);
     return vOut;
