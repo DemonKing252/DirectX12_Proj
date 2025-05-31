@@ -449,6 +449,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         { XMFLOAT3(1.0f,  0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 0.0f), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
         { XMFLOAT3(1.0f, -1.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
         { XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+        { XMFLOAT3(1.0f, -1.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+        { XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
     };
     UINT16 quad_indicies_z[] = {
         0, 1, 2,
@@ -636,11 +638,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     ComPtr<ID3D12DescriptorHeap> depthSRVDescriptorHeap;
 
-    D3D12_SHADER_RESOURCE_VIEW_DESC depthSRVDesc = { };
-    depthSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    depthSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    depthSRVDesc.Format = DXGI_FORMAT_R32_FLOAT;    // HAS TO BE R32 Format
-    depthSRVDesc.Texture2D.MipLevels = 1;
+    //D3D12_SHADER_RESOURCE_VIEW_DESC depthSRVDesc = { };
+    //depthSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    //depthSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    //depthSRVDesc.Format = DXGI_FORMAT_R32_FLOAT;    // HAS TO BE R32 Format
+    //depthSRVDesc.Texture2D.MipLevels = 1;
 
     D3D12_DESCRIPTOR_HEAP_DESC dsvDesc = { };
     dsvDesc.NumDescriptors = 1;
@@ -680,7 +682,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         D3D12_RESOURCE_DESC depthDesc;
         ZeroMemory(&depthDesc, sizeof(D3D12_RESOURCE_DESC));
 
-        depthDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+        depthDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
         depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
         depthDesc.Width = 1920;
         depthDesc.Height = 1080;
@@ -692,7 +694,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         D3D12_CLEAR_VALUE clearValue;
         ZeroMemory(&clearValue, sizeof(D3D12_CLEAR_VALUE));
 
-        clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+        clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
         clearValue.DepthStencil.Depth = 1.0f;
 
         // depth buffer resource
@@ -713,36 +715,35 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         ThrowIfFailed(device->CreateDescriptorHeap(&dsvDescHeap, IID_PPV_ARGS(&shadowDSVHeap)));
 
         D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-        dsvDesc.Format = DXGI_FORMAT_D32_FLOAT; // must match your resource's clear value format
+        dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // must match your resource's clear value format
         dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
         dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 
         device->CreateDepthStencilView(shadowMapResource.Get(), &dsvDesc, shadowDSVHeap->GetCPUDescriptorHandleForHeapStart());
     }
+    // Texture Heap
+    // Descriptor Index 0 -> Stone
+    // Descriptor Index 1 -> Checkboard
+    // Descriptor Index 2 -> Depth Buffer for Shadow Map
+    ID3D12DescriptorHeap* textureDescriptorHeap = nullptr;
+    D3D12_DESCRIPTOR_HEAP_DESC srvDesc = { };
+    srvDesc.NumDescriptors = 3;
+    srvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    srvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
+    ThrowIfFailed(device->CreateDescriptorHeap(&srvDesc, IID_PPV_ARGS(&textureDescriptorHeap)));
 
-    ID3D12DescriptorHeap* shadowDepthStencilSRVHeap;
+    //ID3D12DescriptorHeap* shadowDepthStencilSRVHeap;
     {
 
 
-        D3D12_DESCRIPTOR_HEAP_DESC depthSRVHeapDesc = {};
-        depthSRVHeapDesc.NumDescriptors = 1;
-        depthSRVHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        depthSRVHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        //D3D12_DESCRIPTOR_HEAP_DESC depthSRVHeapDesc = {};
+        //depthSRVHeapDesc.NumDescriptors = 1;
+        //depthSRVHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        //depthSRVHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        //
+        //ThrowIfFailed(device->CreateDescriptorHeap(&depthSRVHeapDesc, IID_PPV_ARGS(&shadowDepthStencilSRVHeap)));
 
-        ThrowIfFailed(device->CreateDescriptorHeap(&depthSRVHeapDesc, IID_PPV_ARGS(&shadowDepthStencilSRVHeap)));
-
-        D3D12_SHADER_RESOURCE_VIEW_DESC depthSRVDesc = { };
-        ZeroMemory(&depthSRVDesc, sizeof(D3D12_SHADER_RESOURCE_VIEW_DESC));
-
-        depthSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-        depthSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        depthSRVDesc.Format = DXGI_FORMAT_R32_FLOAT;    // HAS TO BE R32 Format
-        depthSRVDesc.Texture2D.MipLevels = 1;
-
-
-
-        device->CreateShaderResourceView(shadowMapResource.Get(), &depthSRVDesc, shadowDepthStencilSRVHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
     //XMFLOAT4(0.0f, 4.0f, 4.0f, 1.0f)
@@ -865,14 +866,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // step 2: shader resource view:
 
-    D3D12_DESCRIPTOR_HEAP_DESC srvDesc = { };
-    srvDesc.NumDescriptors = 2;
-    srvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    srvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-    ID3D12DescriptorHeap* textureDescriptorHeap = nullptr;
-    ThrowIfFailed(device->CreateDescriptorHeap(&srvDesc, IID_PPV_ARGS(&textureDescriptorHeap)));
-
 
     D3D12_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc = { };
     shaderResourceViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -880,17 +873,35 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     shaderResourceViewDesc.Format = checkboardResourceView->GetDesc().Format;
     shaderResourceViewDesc.Texture2D.MipLevels = checkboardResourceView->GetDesc().MipLevels;
 
-    device->CreateShaderResourceView(checkboardResourceView.Get(), &shaderResourceViewDesc, textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE texHeapStartCPU(textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+    device->CreateShaderResourceView(checkboardResourceView.Get(), &shaderResourceViewDesc, texHeapStartCPU);
 
 
     shaderResourceViewDesc.Format = stoneResourceView->GetDesc().Format;
     shaderResourceViewDesc.Texture2D.MipLevels = stoneUploadHeap->GetDesc().MipLevels;
 
     // Next descriptor
-    CD3DX12_CPU_DESCRIPTOR_HANDLE texHeapStartCPU(textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
     texHeapStartCPU.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-
     device->CreateShaderResourceView(stoneResourceView.Get(), &shaderResourceViewDesc, texHeapStartCPU);
+
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC depthSRVDesc = { };
+    ZeroMemory(&depthSRVDesc, sizeof(D3D12_SHADER_RESOURCE_VIEW_DESC));
+
+    depthSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    depthSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    depthSRVDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;    // HAS TO BE R32 Format
+    depthSRVDesc.Texture2D.MipLevels = 1;
+
+    // Next descriptor
+    texHeapStartCPU.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+    CD3DX12_GPU_DESCRIPTOR_HANDLE shadowDepthBufferTextureHandle(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+    shadowDepthBufferTextureHandle.Offset(2, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+
+    device->CreateShaderResourceView(shadowMapResource.Get(), &depthSRVDesc, texHeapStartCPU);
+
+
 
 
     // step 3: sampler state:
@@ -919,13 +930,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         D3D12_SHADER_VISIBILITY_PIXEL // shader visibility
     );
 
-    D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
-    samplerHeapDesc.NumDescriptors = 1; // Or more if you want multiple samplers
-    samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-    samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-    ComPtr<ID3D12DescriptorHeap> samplerHeap;
-    device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&samplerHeap));
+    //D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
+    //samplerHeapDesc.NumDescriptors = 1; // Or more if you want multiple samplers
+    //samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+    //samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    //
+    //ComPtr<ID3D12DescriptorHeap> samplerHeap;
+    //device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&samplerHeap));
 
     /*
     samplerState[0].Init(
@@ -1140,7 +1151,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     opaquePsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     opaquePsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     opaquePsoDesc.DepthStencilState = opaqueDepthViewDesc;
-    opaquePsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+    opaquePsoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 
     // Stenciling
@@ -1173,7 +1184,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     shadowCameraPsoDesc.RasterizerState = shadowRasterizerDesc;
     
-    shadowCameraPsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+    shadowCameraPsoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 
     ThrowIfFailed(device->CreateGraphicsPipelineState(&shadowCameraPsoDesc, IID_PPV_ARGS(&shadowPipelineState)));
@@ -1225,6 +1236,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UINT64 fenceValue = 0;
     // Main message loop:
     //while (msg.message != WM_QUIT)
+    UINT64 frame = 0;
     while (msg.message != WM_QUIT)
     {
     
@@ -1295,19 +1307,26 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             // Bind the Depth Buffer (Not the RTV, we don't want to draw to the Frame Buffer, just store the depth pixels in the depth buffer)
             commandList->OMSetRenderTargets(0, nullptr, FALSE, &shadowDSVHeap->GetCPUDescriptorHandleForHeapStart());
 
-            commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-                shadowMapResource.Get(),
-                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,  // from
-                D3D12_RESOURCE_STATE_DEPTH_WRITE));          // to
+            if (frame > 0)
+            {
+                commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+                    shadowMapResource.Get(),
+                    D3D12_RESOURCE_STATE_GENERIC_READ,  // from
+                    D3D12_RESOURCE_STATE_DEPTH_WRITE));          // to
+            }
+            
     
+            frame++;
+
             // Reset all depth values to 1.0f
             commandList->ClearDepthStencilView(shadowDSVHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
             //commandList->SetDescriptorHeaps(1, &shadowDepthStencilSRVHeap);
-            //commandList->SetGraphicsRootDescriptorTable(3, shadowDepthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
             commandList->SetDescriptorHeaps(1, &textureDescriptorHeap);
             commandList->SetGraphicsRootDescriptorTable(1, textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+            commandList->SetGraphicsRootDescriptorTable(2, shadowDepthBufferTextureHandle);
+            commandList->SetGraphicsRootDescriptorTable(3, shadowDepthBufferTextureHandle);
 
             // MAY NEED THIS
 
@@ -1348,7 +1367,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
                 shadowMapResource.Get(),
                 D3D12_RESOURCE_STATE_DEPTH_WRITE,            // from
-                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)); // to
+                D3D12_RESOURCE_STATE_GENERIC_READ)); // to
         }
     
     
@@ -1362,11 +1381,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         if (1)
         {
 
-            commandList->SetDescriptorHeaps(1, &shadowDepthStencilSRVHeap);
-            commandList->SetGraphicsRootDescriptorTable(2, shadowDepthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
-            commandList->SetDescriptorHeaps(1, &shadowDepthStencilSRVHeap);
-            commandList->SetGraphicsRootDescriptorTable(3, shadowDepthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
             // Resource Barrier
             commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(rtvResources[swapChainIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
@@ -1387,7 +1402,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
             //commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
             //    shadowMapResource.Get(),
-            //    D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,  // from
+            //    D3D12_RESOURCE_STATE_RENDER_TARGET,  // from
             //    D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
             commandList->ClearDepthStencilView(depthDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
@@ -1413,7 +1428,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             commandList->SetPipelineState(opaquePipelineStateStencilOn);
 
 
-            commandList->SetGraphicsRootDescriptorTable(2, shadowDepthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
+            //commandList->SetGraphicsRootDescriptorTable(2, shadowDepthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
             CD3DX12_GPU_DESCRIPTOR_HANDLE stoneTextureGPUHandle(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
             stoneTextureGPUHandle.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
@@ -1475,8 +1490,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             //commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
         }
     
-        
-    
+        commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+            rtvResources[swapChainIndex],
+            D3D12_RESOURCE_STATE_RENDER_TARGET,  // from
+            D3D12_RESOURCE_STATE_PRESENT)
+        );
+        if (frame > 1)
+            frame++;
     
         ThrowIfFailed(commandList->Close());
     

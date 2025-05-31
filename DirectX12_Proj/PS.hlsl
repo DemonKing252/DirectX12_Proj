@@ -85,12 +85,12 @@ float4 ShadowCalculation(float4 shadowPos)
     //float linearDepth = (2.0 * near * far) / (far + near - z * (far - near));
     //return float4(linearDepth.xxx, 1.0f);
     
-    //float shadowDepth = shadowMap.SampleCmp(shadowSampl, shadowTexCoords, currentDepth - bias);
+    float shadowDepth = shadowMap.SampleCmp(shadowSampl, shadowTexCoords, currentDepth - bias);
     //float shadowDepth = shadowMapFloat.SampleCmpLevelZero(shadowSampl, shadowTexCoords, saturate(currentDepth - bias)).r;
     
-    float depthFromShadowMap = shadowMap.SampleLevel(texSampl, shadowTexCoords, 0).r;
-    float shadow = shadowMap.SampleCmpLevelZero(shadowSampl, shadowTexCoords, currentDepth - bias);
-    float depthDelta = currentDepth - depthFromShadowMap;
+    //float depthFromShadowMap = shadowMap.SampleLevel(texSampl, shadowTexCoords, 0).r;
+    //float shadow = shadowMap.SampleCmpLevelZero(shadowSampl, shadowTexCoords, currentDepth - bias);
+    //float depthDelta = currentDepth - depthFromShadowMap;
     //rawDepth = shadowMap.SampleCmpLevelZero(shadowSampl, shadowTexCoords, currentDepth).r;
 
     
@@ -100,7 +100,7 @@ float4 ShadowCalculation(float4 shadowPos)
     
     // shadow is 1 if lit, 0 if in shadow, no manual comparison needed here
 
-    return float4(shadow.xxx, 1.0f);
+    return float4(rawDepth.xxx, 1.0f);
 }
 float3 ComputeLighting(float3 normal, float3 pixelPos)
 {
@@ -169,9 +169,9 @@ float4 PSMainOpaque(VertexIn vIn) : SV_TARGET
     //    finalShadow = float3(1.0f, 1.0f, 1.0f);
     
     
-    //float shadowFactor = ShadowCalculation(vIn.shadowPos) * float3(1.0f, 1.0f, 1.0f);
+    float shadowFactor = ShadowCalculation(vIn.shadowPos);
     
-    return ShadowCalculation(vIn.shadowPos);
+    return float4(sampledTexture * shadowFactor.xxx, 1.0f);
 }
 
 float4 PSMainDepthCamera(VertexIn vIn) : SV_TARGET
