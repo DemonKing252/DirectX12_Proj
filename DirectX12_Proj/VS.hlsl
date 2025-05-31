@@ -34,7 +34,6 @@ VertexOut VSMainOpaque(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOOR
 {
     VertexOut vOut;
     
-    //float4 WorldP = mul(float4(p, 1.0f), World);
     float4 ModelP = mul(float4(p, 1.0f), Model);
     
     vOut.shadowPos = mul(ModelP, LightViewProjTextureSpace);
@@ -49,16 +48,10 @@ VertexOut VSMainOpaque(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOOR
 
     return vOut;
 }
-//float4 WorldP = mul(float4(p, 1.0f), World);
-//vOut.shadowPos = mul(float4(p, 1.0f), Model);
 VertexOut VSMainDepthCamera(uint vertexID : SV_VertexID)
 {
     // We don't really need a vertex buffer for this because we are drawing a simple quad with no World matrix.
-
-    /*
-    float2 vertexInner = float2(0.5f, -0.5f);
-    float2 vertexOuter = float2(1.0f, -1.0f);
-    */
+    
     
     float2 vertexInner = float2(-1.0f, +1.0f);
     float2 vertexOuter = float2(+1.0f, -1.0f);
@@ -79,17 +72,9 @@ VertexOut VSMainDepthCamera(uint vertexID : SV_VertexID)
         float2(1.0f, 1.0f),
         float2(0.0f, 1.0f),
         float2(0.0f, 0.0f),
-        
-        //float2(0.0f, 1.0f),
-        //float2(1.0f, 1.0f),
-        //float2(1.0f, 0.0f),
-        //float2(1.0f, 0.0f),
-        //float2(0.0f, 0.0f),
-        //float2(0.0f, 1.0f),
-    
+
     };
     VertexOut vout;
-    //vout.shadowPos = float4(vertex_positions[vertexID], 1.0f);
     vout.pos = float4(vertex_positions[vertexID], 1.0f);
     vout.uv = uv_coords[vertexID];
     
@@ -100,25 +85,14 @@ VertexOut VSMainShadow(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOOR
 {
     VertexOut vOut;
     
-    //float4 ModelP = mul(float4(p, 1.0f), Model);
-    //float4 WorldP = mul(World, float4(p, 1.0f)); // Model * position
     float4 ModelP = mul(float4(p, 1.0f), Model); // (if you use Model separately)
-    //float4 lightP = mul(float4(p, 1.0f), LightViewProj); // LightViewProj * ModelP
-    
-    /*
-    float4 WorldP = mul(float4(p, 1.0f), World);
-    float4 ModelP = mul(float4(p, 1.0f), Model);
-    float4 lightP = mul(ModelP, LightViewProj);
-    */
 
-    //vOut.worldP = WorldP;
     vOut.pos = mul(ModelP, LightViewProj);
     vOut.col = c;
     vOut.uv = uv;
     vOut.pixelPos = mul(float4(p, 1.0f), Model);
     vOut.shadowPos = mul(ModelP, LightViewProj);
     vOut.normal = normalize(mul(n, (float3x3) Model));
-    //vOut.shadowPos = mul(float4(p, 1.0f), Model);
     return vOut;
 }
 
