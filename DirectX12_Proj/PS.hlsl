@@ -42,6 +42,7 @@ SamplerComparisonState shadowSampl : register(s1);
 Texture2D tex : register(t0);
 Texture2D<float> depth : register(t1);
 Texture2D<float> shadowMap : register(t2);
+Texture2D reflectMap : register(t3);
 
 /*
 float ShadowCalculation(float4 shadowPos)
@@ -163,4 +164,65 @@ float PSMainShadow(VertexIn vIn) : SV_Depth
 float4 PSMainOutline(VertexIn vIn) : SV_TARGET
 {
     return float4(1.0f, 0.7f, 0.0f, 1.0f);
+}
+
+
+float3 SampleTexture3D(float3 worldPos, float3 normal, Texture2D tex)
+{
+    // Take absolute normal components for blending weights
+    float3 blendWeights = abs(normal);
+    blendWeights /= (blendWeights.x + blendWeights.y + blendWeights.z);
+
+    // Project world position onto three planes:
+    float2 uvX = worldPos.yz; // projection on YZ plane for X axis
+    float2 uvY = worldPos.xz; // projection on XZ plane for Y axis
+    float2 uvZ = worldPos.xy; // projection on XY plane for Z axis
+
+    // Sample texture on each plane:
+    float3 sampleX = reflectMap.Sample(texSampl, uvX).rgb;
+    float3 sampleY = reflectMap.Sample(texSampl, uvY).rgb;
+    float3 sampleZ = reflectMap.Sample(texSampl, uvZ).rgb;
+
+    // Blend samples based on normal direction weights:
+    return sampleX * blendWeights.x + sampleY * blendWeights.y + sampleZ * blendWeights.z;
+}
+
+float4 PSReflect(VertexIn vIn) : SV_TARGET
+{
+    LightResult light_result = ComputeLighting(vIn.normal, vIn.pixelPos);
+    
+    float3 lightResult = saturate(light_result.Ambient + light_result.Diffuse + light_result.Specular);
+    
+    
+    
+    float shadowFactor = max(ComputeShadowFactor(vIn.shadowPos), 0.4f);
+    
+    if (light_result.Diffuse.x < 0.1f)
+        shadowFactor = 0.4f;
+    
+    // Disable Diffuse & Specular light if shadow appears
+    if (shadowFactor < 0.5f)
+        lightResult = float3(0.6f, 0.6f, 0.6f);
+        
+    
+    //float3 returnColor = shadowFactor.xxx * lightResult * texUV;
+    
+    
+    float3 viewDir = normalize(CameraPosition.xyz - vIn.pixelPos);
+    float3 reflectedDir = reflect(-viewDir, normalize(vIn.normal));
+    
+    
+    //float2 tiledUV = vIn.uv * float2(2.0f, 2.0f);
+    
+    float3 reflectiveMap = reflectMap.Sample(texSampl, vIn.uv).xyz;
+    
+    float3 texUV = tex.Sample(texSampl, vIn.uv).xyz;
+    
+    float reflectiveness = 0.7; // glassy but not mirror-like
+    //float fresnel = pow(1.0 - saturate(dot(viewDir, vIn.normal)), 5.0);
+    
+    float3 finalColor = lerp(texUV, reflectiveMap, reflectiveness);
+    //float3 finalColor = SampleTexture3D(vIn.pixelPos.xyz, normalize(vIn.normal), tex);
+    
+    return float4(finalColor.xyz, 1.0f);
 }

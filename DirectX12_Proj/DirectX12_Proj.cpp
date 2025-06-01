@@ -304,54 +304,64 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     Vertex cube_verticies[] = {
 
         // vertex.x, vertex.y, color.r, color.g, color.b
-        /*0*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
-        /*1*/XMFLOAT3({-0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
-        /*2*/XMFLOAT3({+0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
-        /*2*/XMFLOAT3({+0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
-        /*3*/XMFLOAT3({+0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
-        /*0*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
+        /*0*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
+        /*1*/XMFLOAT3({-0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
+        /*2*/XMFLOAT3({+0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
+        /*2*/XMFLOAT3({+0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
+        /*3*/XMFLOAT3({+0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
+        /*0*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), // Max Depth
 
-        /*0*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
-        /*2*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
+        /*0*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
+        /*2*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
         /*1*/XMFLOAT3({-0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
-        /*2*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
-        /*0*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
+        /*2*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
+        /*0*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
         /*3*/XMFLOAT3({+0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 0.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, +1.0f), // Least Depth
 
 
-        /*3*/XMFLOAT3({-0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left--------------------------------------
-        /*3*/XMFLOAT3({-0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left
-        /*3*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left
-        /*3*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left
-        /*3*/XMFLOAT3({+0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left
-        /*3*/XMFLOAT3({-0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left--------------------------------------
+        /*3*/XMFLOAT3({-0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left--------------------------------------
+        /*3*/XMFLOAT3({-0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left
+        /*3*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left
+        /*3*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left
+        /*3*/XMFLOAT3({+0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left
+        /*3*/XMFLOAT3({-0.5f, +0.5f, -0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, +1.0f, 0.0f),// bottom left--------------------------------------
 
 
-        /*3*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left--------------------------------------
-        /*3*/XMFLOAT3({+0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left
-        /*3*/XMFLOAT3({+0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left
-        /*3*/XMFLOAT3({+0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left
-        /*3*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left
-        /*3*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left--------------------------------------
+        /*3*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left--------------------------------------
+        /*3*/XMFLOAT3({+0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left
+        /*3*/XMFLOAT3({+0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left
+        /*3*/XMFLOAT3({+0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left
+        /*3*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left
+        /*3*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 1.0f, 1.0f, 0.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), // bottom left--------------------------------------
 
 
-        /*3*/XMFLOAT3({+0.5f, -0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left--------------------------------------
-        /*3*/XMFLOAT3({+0.5f, +0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
-        /*3*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
-        /*3*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
-        /*3*/XMFLOAT3({+0.5f, -0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
-        /*3*/XMFLOAT3({+0.5f, -0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left--------------------------------------
+        /*3*/XMFLOAT3({+0.5f, -0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left--------------------------------------
+        /*3*/XMFLOAT3({+0.5f, +0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
+        /*3*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
+        /*3*/XMFLOAT3({+0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
+        /*3*/XMFLOAT3({+0.5f, -0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left
+        /*3*/XMFLOAT3({+0.5f, -0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(+1.0f, 0.0f, 0.0f), // bottom left--------------------------------------
 
-        /*3*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left--------------------------------------
-        /*3*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
-        /*3*/XMFLOAT3({-0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
-        /*3*/XMFLOAT3({-0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
-        /*3*/XMFLOAT3({-0.5f, +0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
-        /*3*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
+        /*3*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left--------------------------------------
+        /*3*/XMFLOAT3({-0.5f, -0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 0.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
+        /*3*/XMFLOAT3({-0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
+        /*3*/XMFLOAT3({-0.5f, +0.5f, +0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 0.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
+        /*3*/XMFLOAT3({-0.5f, +0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
+        /*3*/XMFLOAT3({-0.5f, -0.5f, -0.5f}), XMFLOAT3({ 0.0f, 1.0f, 1.0f }), XMFLOAT2(0.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), // bottom left
 
 
     };
+    /*
+    From this -> To this
 
+    0.0f, 0.0f   -> 0.0f, 1.0f
+    1.0f, 0.0f   -> 0.0f, 0.0f
+    1.0f, 1.0f   -> 1.0f, 0.0f
+    1.0f, 1.0f   -> 1.0f, 0.0f
+    0.0f, 1.0f   -> 1.0f, 1.0f
+    0.0f, 0.0f   -> 0.0f, 1.0f
+    
+    */
 
     float uv_wrap = 7.0f;
     Vertex quad_verticies_y[] = {
@@ -388,7 +398,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Constant buffer steps
     // step 1: create 2 resources
 
-    const int CBV_Views = 15;
+    const int CBV_Views = 50;
     ID3D12Resource* pCBVResource[CBV_Views];
     void* pCBVBytes[CBV_Views];
 
@@ -566,7 +576,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ThrowIfFailed(device->CreateDescriptorHeap(&dsvDesc, IID_PPV_ARGS(&depthSRVDescriptorHeap)));
 
 
-    /*****************************************************/
+    /*****************************************************************************************************************************************/
     // Shadow map resource
     ComPtr<ID3D12Resource> shadowMapResource;
     ID3D12DescriptorHeap* shadowDSVHeap;
@@ -614,17 +624,58 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
         device->CreateDepthStencilView(shadowMapResource.Get(), &dsvDesc, shadowDSVHeap->GetCPUDescriptorHandleForHeapStart());
     }
-    // Texture Heap
-    // Descriptor Index 0 -> Stone
-    // Descriptor Index 1 -> Checkboard
-    // Descriptor Index 2 -> Depth Buffer for Shadow Map
-    ID3D12DescriptorHeap* textureDescriptorHeap = nullptr;
-    D3D12_DESCRIPTOR_HEAP_DESC srvDesc = { };
-    srvDesc.NumDescriptors = 3;
-    srvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    srvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
-    ThrowIfFailed(device->CreateDescriptorHeap(&srvDesc, IID_PPV_ARGS(&textureDescriptorHeap)));
+    /*****************************************************************************************************************************************/
+    // Reflective texture face
+
+    // step 1: create the resource that holds the texture, just as we did with the shadow map
+    ComPtr<ID3D12Resource> reflectiveMapResource;
+
+    D3D12_RESOURCE_DESC texDesc;
+    ZeroMemory(&texDesc, sizeof(D3D12_RESOURCE_DESC));
+
+    texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    texDesc.Alignment = 0;
+    texDesc.Width = g_iWidth;
+    texDesc.Height = g_iHeight;
+    texDesc.DepthOrArraySize = 1;
+    texDesc.MipLevels = 1;
+    texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;    // Not using D24G8 typeless unlike the shadow depth buffer
+    texDesc.SampleDesc.Count = 1;
+    texDesc.SampleDesc.Quality = 0;
+    texDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    texDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    D3D12_CLEAR_VALUE refClear;
+    ZeroMemory(&refClear, sizeof(D3D12_CLEAR_VALUE));
+    refClear.Format = texDesc.Format;
+    refClear.Color[0] = 0.0f;
+    refClear.Color[1] = 0.0f;
+    refClear.Color[2] = 0.0f;
+    refClear.Color[3] = 1.0f;
+
+    ThrowIfFailed(device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &texDesc,
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        &refClear,
+        IID_PPV_ARGS(&reflectiveMapResource)
+    ));
+
+    // step 2: create a render target view
+    ComPtr<ID3D12DescriptorHeap> reflectiveMapHeapRTV;
+
+    D3D12_DESCRIPTOR_HEAP_DESC reflectiveMapHeapRTVDesc;
+    ZeroMemory(&reflectiveMapHeapRTVDesc, sizeof(D3D12_DESCRIPTOR_HEAP_DESC));
+    reflectiveMapHeapRTVDesc.NumDescriptors = 1;
+    reflectiveMapHeapRTVDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+
+    ThrowIfFailed(device->CreateDescriptorHeap(&reflectiveMapHeapRTVDesc, IID_PPV_ARGS(&reflectiveMapHeapRTV)));
+
+    device->CreateRenderTargetView(reflectiveMapResource.Get(), nullptr, reflectiveMapHeapRTV->GetCPUDescriptorHandleForHeapStart());
+
 
     float dist = 10.0f;
     cBuffer.directionalLight.Position = XMFLOAT3(0.0f, dist, -dist);
@@ -687,6 +738,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     //float angle = 0.0f;
     auto update_world_matrix = [&](XMFLOAT3 Translate, float Rotation, XMFLOAT3 Scale = XMFLOAT3(1.0f, 1.0f, 1.0f))
     {
+        
         update_shadow_object(Translate, Rotation, Scale);
 
         // View Matrix
@@ -721,25 +773,83 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     };
 
+    //XMFLOAT3 reflectionEye;
+    //XMFLOAT3 reflectionLook;
+    auto update_reflective_scene = [&](XMFLOAT3 Translate, float Rotation, XMFLOAT3 Scale, XMFLOAT3 eye, XMFLOAT3 lookDirection)
+    {
+        update_shadow_object(Translate, Rotation, Scale);
+
+        // View Matrix
+        //eyePos = XMVectorSet(0.0f, +3.0f, -6.0f, 0.0f);  // Camera position
+        XMVECTOR upDir = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);   // Up direction
+
+        XMVECTOR reflectLook = XMVectorSet(
+            eye.x + lookDirection.x,
+            eye.y + lookDirection.y,
+            eye.z + lookDirection.z,
+            1.0f
+        );
+        
+        XMVECTOR reflectEye = XMVectorSet(eye.x, eye.y, eye.z, 0.0f);   // Where camera looks
+
+
+        view = XMMatrixLookAtLH(reflectEye, reflectLook, upDir);
+
+        // Projection Matrix
+        float fovAngleY = XMConvertToRadians(45.0f); // 45 degree FOV vertical
+        float aspectRatio = g_iWidth / g_iHeight;            // Width / Height of viewport
+        float nearZ = 0.1f;
+        float farZ = 100.0f;
+
+        proj = XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, nearZ, farZ);
+
+        XMMATRIX scale = XMMatrixScaling(Scale.x, Scale.y, Scale.z);
+        XMMATRIX rotation = XMMatrixRotationRollPitchYaw(XMConvertToRadians(0.0f), XMConvertToRadians(Rotation), XMConvertToRadians(0.0f));
+        XMMATRIX translate = XMMatrixTranslation(Translate.x, Translate.y, Translate.z);
+
+        model = scale * rotation * translate;
+        modelNormal = rotation;
+
+
+        XMStoreFloat4(&cBuffer.CameraPosition, eyePos);
+
+        cBuffer.Model = XMMatrixTranspose(model);
+        //cBuffer.PerspectiveViewProj = XMMatrixTranspose(XMMatrixMultiply(view, proj));
+        cBuffer.PerspectiveViewProj = XMMatrixTranspose(XMMatrixMultiply(view, proj));
+
+
+    };
     
 
     /***********************************************************************************************************************************************************/
 
     /***********************************************************************************************************************************************************/
-    // Shader Resource View
+    // Shader Resource View to store all of our textures
 
     // step 1: load the texture into a resource and upload heap
+    ID3D12DescriptorHeap* textureDescriptorHeap = nullptr;
+    D3D12_DESCRIPTOR_HEAP_DESC srvDesc = { };
+    srvDesc.NumDescriptors = 5;
+    srvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    srvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+    ThrowIfFailed(device->CreateDescriptorHeap(&srvDesc, IID_PPV_ARGS(&textureDescriptorHeap)));
 
     ComPtr<ID3D12Resource> checkboardResourceView = nullptr;
     ComPtr<ID3D12Resource> checkboardUploadHeap = nullptr;
+
     ComPtr<ID3D12Resource> stoneResourceView = nullptr;
     ComPtr<ID3D12Resource> stoneUploadHeap = nullptr;
+
+    ComPtr<ID3D12Resource> iceResourceView = nullptr;
+    ComPtr<ID3D12Resource> iceUploadHeap = nullptr;
 
     ThrowIfFailed(commandAllocator->Reset());
     ThrowIfFailed(commandList->Reset(commandAllocator, nullptr));
 
     ThrowIfFailed(CreateDDSTextureFromFile12(device, commandList, L"checkboard.dds", checkboardResourceView, checkboardUploadHeap));
     ThrowIfFailed(CreateDDSTextureFromFile12(device, commandList, L"Stone.dds", stoneResourceView, stoneUploadHeap));
+    ThrowIfFailed(CreateDDSTextureFromFile12(device, commandList, L"ice.dds", iceResourceView, iceUploadHeap));
 
 
     ThrowIfFailed(commandList->Close());
@@ -759,7 +869,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     shaderResourceViewDesc.Format = checkboardResourceView->GetDesc().Format;
     shaderResourceViewDesc.Texture2D.MipLevels = checkboardResourceView->GetDesc().MipLevels;
 
-
+    // Descriptor #0 - checkboard
     CD3DX12_CPU_DESCRIPTOR_HANDLE texHeapStartCPU(textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
     device->CreateShaderResourceView(checkboardResourceView.Get(), &shaderResourceViewDesc, texHeapStartCPU);
 
@@ -767,9 +877,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     shaderResourceViewDesc.Format = stoneResourceView->GetDesc().Format;
     shaderResourceViewDesc.Texture2D.MipLevels = stoneUploadHeap->GetDesc().MipLevels;
 
-    // Next descriptor
+    // Descriptor #1 - checkboard
     texHeapStartCPU.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
     device->CreateShaderResourceView(stoneResourceView.Get(), &shaderResourceViewDesc, texHeapStartCPU);
+
+
+    shaderResourceViewDesc.Format = iceResourceView->GetDesc().Format;
+    shaderResourceViewDesc.Texture2D.MipLevels = stoneUploadHeap->GetDesc().MipLevels;
+
+    // Descriptor #2 - ice
+    texHeapStartCPU.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+    device->CreateShaderResourceView(iceResourceView.Get(), &shaderResourceViewDesc, texHeapStartCPU);
 
 
     D3D12_SHADER_RESOURCE_VIEW_DESC depthSRVDesc = { };
@@ -780,15 +898,34 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     depthSRVDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;    // HAS TO BE R32 Format
     depthSRVDesc.Texture2D.MipLevels = 1;
 
-    // Next descriptor
+    // Descriptor #3 - shadow depth buffer
     texHeapStartCPU.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+
     CD3DX12_GPU_DESCRIPTOR_HANDLE shadowDepthBufferTextureHandle(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-    shadowDepthBufferTextureHandle.Offset(2, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+    shadowDepthBufferTextureHandle.Offset(3, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
     device->CreateShaderResourceView(shadowMapResource.Get(), &depthSRVDesc, texHeapStartCPU);
 
 
+    D3D12_SHADER_RESOURCE_VIEW_DESC reflectiveSRVDesc = {};
+    reflectiveSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    reflectiveSRVDesc.Format = texDesc.Format;
+    reflectiveSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    reflectiveSRVDesc.Texture2D.MostDetailedMip = 0;
+    reflectiveSRVDesc.Texture2D.MipLevels = 1;
+    reflectiveSRVDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
+    // Descriptor #4 - reflective CPU handle
+    CD3DX12_CPU_DESCRIPTOR_HANDLE reflectiveCPUHandle(textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+    reflectiveCPUHandle.Offset(4, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+    
+    CD3DX12_GPU_DESCRIPTOR_HANDLE reflectiveGPUHandle(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+    reflectiveGPUHandle.Offset(4, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+
+    
+    // Descriptor #3
+
+    device->CreateShaderResourceView(reflectiveMapResource.Get(), &reflectiveSRVDesc, reflectiveCPUHandle);
 
     // step 3: sampler state:
     CD3DX12_STATIC_SAMPLER_DESC samplerState[2];
@@ -854,11 +991,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     shadowTextureRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     shadowTextureRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    CD3DX12_ROOT_PARAMETER rootParameters[4];
+    D3D12_DESCRIPTOR_RANGE reflectTextureRange = {};
+    reflectTextureRange.BaseShaderRegister = 3; // base register
+    reflectTextureRange.NumDescriptors = 1;
+    reflectTextureRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    reflectTextureRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    CD3DX12_ROOT_PARAMETER rootParameters[5];
     rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
     rootParameters[1].InitAsDescriptorTable(1, &srvTextureRange, D3D12_SHADER_VISIBILITY_ALL);
     rootParameters[2].InitAsDescriptorTable(1, &dsvTextureRange, D3D12_SHADER_VISIBILITY_ALL);
     rootParameters[3].InitAsDescriptorTable(1, &shadowTextureRange, D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[4].InitAsDescriptorTable(1, &reflectTextureRange, D3D12_SHADER_VISIBILITY_ALL);
+
     root_sig_desc.Init(_countof(rootParameters), rootParameters, _countof(samplerState), samplerState, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
     ThrowIfFailed(D3D12SerializeRootSignature(&root_sig_desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
     ThrowIfFailed(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
@@ -876,6 +1021,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     ComPtr<ID3DBlob> vs_outline_opaque;
     ComPtr<ID3DBlob> ps_outline_opaque;
+
+    ComPtr<ID3DBlob> vs_reflect_map;
+    ComPtr<ID3DBlob> ps_reflect_map;
 
     ComPtr<ID3DBlob> errors;
 
@@ -928,6 +1076,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
 
     hr = D3DCompileFromFile(L"PS.hlsl", nullptr, nullptr, "PSMainOutline", "ps_5_0", D3DCOMPILE_DEBUG, 0, &ps_outline_opaque, &errors);
+    if (FAILED(hr))
+    {
+        OutputDebugStringA((char*)errors->GetBufferPointer());
+        __debugbreak();
+    }
+    hr = D3DCompileFromFile(L"VS.hlsl", nullptr, nullptr, "VSReflect", "vs_5_0", D3DCOMPILE_DEBUG, 0, &vs_reflect_map, &errors);
+    if (FAILED(hr))
+    {
+        OutputDebugStringA((char*)errors->GetBufferPointer());
+        __debugbreak();
+    }
+
+    hr = D3DCompileFromFile(L"PS.hlsl", nullptr, nullptr, "PSReflect", "ps_5_0", D3DCOMPILE_DEBUG, 0, &ps_reflect_map, &errors);
     if (FAILED(hr))
     {
         OutputDebugStringA((char*)errors->GetBufferPointer());
@@ -998,6 +1159,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ID3D12PipelineState* depthPipelineState;
     ID3D12PipelineState* shadowPipelineState;
     ID3D12PipelineState* outlineStencilPSOState;
+    ID3D12PipelineState* reflectObjectPipelineState;
 
     opaquePsoDesc.pRootSignature = rootSignature;
     opaquePsoDesc.InputLayout = { inputLayout, _countof(inputLayout) };
@@ -1018,6 +1180,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     ThrowIfFailed(device->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&opaquePipelineState)));
 
+
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC reflectiveObjectPSODesc = opaquePsoDesc;
+    reflectiveObjectPSODesc.VS = { vs_reflect_map->GetBufferPointer(), vs_reflect_map->GetBufferSize() };
+    reflectiveObjectPSODesc.PS = { ps_reflect_map->GetBufferPointer(), ps_reflect_map->GetBufferSize() };
+
+    ThrowIfFailed(device->CreateGraphicsPipelineState(&reflectiveObjectPSODesc, IID_PPV_ARGS(&reflectObjectPipelineState)));
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC depthCameraPsoDesc = opaquePsoDesc;
     depthCameraPsoDesc.VS = { vs_depth_opaque->GetBufferPointer(), vs_depth_opaque->GetBufferSize() };
@@ -1149,7 +1317,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         commandList->SetGraphicsRootDescriptorTable(3, shadowDepthBufferTextureHandle);
 
         // MAY NEED THIS
-        // -------------------------- Draw Calls --------------------------
+        // ------------------------------------------------------------------------------------------- Draw Scene from Lights POV --------------------------------------------------------------------------------------------
         // Draw calls will populate the depth buffer
 
         UINT16 cbvIndex = 0;
@@ -1182,13 +1350,63 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         // Shadow Draw Call #4 - Reflective Shadow
         cbvIndex++;
         commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-        update_shadow_object(XMFLOAT3(-2.5f, 0.5f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
+        update_shadow_object(XMFLOAT3(-3.5f, 0.5f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
         CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
         commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
         commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
     
-        // Shadow Draw Call #3
-    
+        // ------------------------------------------------------------------------------------------- Draw Reflective Map Scene --------------------------------------------------------------------------------------------
+
+        {
+            // Set Pipeline states
+            commandList->SetPipelineState(opaquePipelineState);
+            commandList->IASetVertexBuffers(0, 1, &quad_vertex_buffer_view);
+            commandList->IASetIndexBuffer(&quad_index_buffer_view);
+
+            commandList->OMSetRenderTargets(1, &reflectiveMapHeapRTV->GetCPUDescriptorHandleForHeapStart(), false, nullptr);
+
+            //float reflective_clear_color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+            commandList->ClearRenderTargetView(reflectiveMapHeapRTV->GetCPUDescriptorHandleForHeapStart(), clear_color, 0, nullptr);
+
+
+            CD3DX12_GPU_DESCRIPTOR_HANDLE checkboardGPUHandle(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+            //checkboardGPUHandle.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+            commandList->SetGraphicsRootDescriptorTable(1, checkboardGPUHandle);
+            
+
+            // Draw #1 - Quad
+            
+            cbvIndex++;
+            update_reflective_scene(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f), XMFLOAT3(-3.5f, 0.5f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f));
+            CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
+            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
+            commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
+
+            checkboardGPUHandle.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+            commandList->SetGraphicsRootDescriptorTable(1, checkboardGPUHandle);
+
+            // Draw Call #2 - Cube
+            cbvIndex++;
+            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            update_reflective_scene(XMFLOAT3(-1.0f, 2.0f, 0.0f), +angle, XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(-3.5f, 0.5f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f));
+            CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
+            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
+            commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
+
+            // Draw Call #3 - Cube
+            cbvIndex++;
+            commandList->OMSetStencilRef(2);
+            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            update_reflective_scene(XMFLOAT3(+1.0f, 2.0f, 0.0f), -angle, XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(-3.5f, 0.5f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f));
+            CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
+            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
+            commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
+        }
+        
+        commandList->SetGraphicsRootDescriptorTable(1, textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+        
+        // ------------------------------------------------------------------------------------------- Draw Regular Scene --------------------------------------------------------------------------------------------
+
         // Resource Barrier -> Depth Write to Shader Resource
         commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
             shadowMapResource.Get(),
@@ -1211,8 +1429,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         commandList->ClearRenderTargetView(rtvHandle, clear_color, 0, nullptr);
         commandList->ClearDepthStencilView(depthDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
-        // ------------------------------------------------------ Draw Regular Scene ---------------------------------------------------------------------------------------------------------------------------------------------
-
+        
         // Bind the Opaque PSO
         commandList->SetPipelineState(opaquePipelineState);
         commandList->IASetVertexBuffers(0, 1, &quad_vertex_buffer_view);
@@ -1228,11 +1445,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         commandList->SetPipelineState(opaquePipelineStateStencilOn);
 
 
-        //commandList->SetGraphicsRootDescriptorTable(2, shadowDepthStencilSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
         CD3DX12_GPU_DESCRIPTOR_HANDLE stoneTextureGPUHandle(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
         stoneTextureGPUHandle.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
         commandList->SetGraphicsRootDescriptorTable(1, stoneTextureGPUHandle);
+
 
         // Draw Call #2
         commandList->OMSetStencilRef(1);
@@ -1253,9 +1470,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
 
         // Draw Call #4 - Reflective Object
+        commandList->SetPipelineState(reflectObjectPipelineState);
+
+        CD3DX12_GPU_DESCRIPTOR_HANDLE reflectiveGPUHandleSRV(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+        reflectiveGPUHandleSRV.Offset(4, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+        commandList->SetGraphicsRootDescriptorTable(4, reflectiveGPUHandleSRV);
+
+
+        CD3DX12_GPU_DESCRIPTOR_HANDLE iceGPUHandleSRV(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+        iceGPUHandleSRV.Offset(2, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+        commandList->SetGraphicsRootDescriptorTable(1, iceGPUHandleSRV);
+        
         cbvIndex++;
         commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-        update_shadow_object(XMFLOAT3(-2.5f, 0.5f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
+        update_shadow_object(XMFLOAT3(-3.5f, 0.5f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
         CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
         commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
         commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
@@ -1425,92 +1653,3 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return (INT_PTR)FALSE;
 }
-
-/*
-// Draw Regular scene
-        if (0)
-        {
-            commandList->SetPipelineState(opaquePipelineState);
-
-
-            commandList->ClearRenderTargetView(rtvHandle, clear_color, 0, nullptr);
-
-            // get the current back buffer resource heap, and set it to the render target
-            commandList->OMSetRenderTargets(1, nullptr, FALSE, &depthDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-            commandList->ClearDepthStencilView(depthDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-
-
-            CD3DX12_GPU_DESCRIPTOR_HANDLE texHeapStartGPU(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-            texHeapStartGPU.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-            commandList->SetGraphicsRootDescriptorTable(1, texHeapStartGPU);
-
-            
-            // Shadow Draw Call #1
-            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-            update_shadow_object(XMFLOAT3(-1.0f, 3.0f, 0.0f), -angle);
-            CopyMemory(pCBVBytes[0], &cBuffer, sizeof(cBuffer));
-            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[0]->GetGPUVirtualAddress());
-            commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
-
-            // Shadow Draw Call #2
-            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-            update_shadow_object(XMFLOAT3(+1.0f, 3.0f, 0.0f), -angle);
-            CopyMemory(pCBVBytes[1], &cBuffer, sizeof(cBuffer));
-            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[1]->GetGPUVirtualAddress());
-            commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
-
-            // Shadow Draw Call #3
-            commandList->IASetVertexBuffers(0, 1, &quad_vertex_buffer_view);
-            commandList->IASetIndexBuffer(&quad_index_buffer_view);
-            update_world_matrix(XMFLOAT3(0.0f, 2.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
-            CopyMemory(pCBVBytes[2], &cBuffer, sizeof(cBuffer));
-            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[2]->GetGPUVirtualAddress());
-            commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
-            
-
-            // ----------------------------------------------------------------------------------------------------------------------------------------------------
-            // Draw Regular Scene
-
-            // Draw Call #1
-commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-update_world_matrix(XMFLOAT3(-1.0f, 1.0f, 0.0f), angle);
-CopyMemory(pCBVBytes[3], &cBuffer, sizeof(cBuffer));
-commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[3]->GetGPUVirtualAddress());
-commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
-
-// Draw Call #2
-commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-update_world_matrix(XMFLOAT3(+1.0f, 1.0f, 0.0f), -angle);
-CopyMemory(pCBVBytes[4], &cBuffer, sizeof(cBuffer));
-commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[4]->GetGPUVirtualAddress());
-commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
-
-texHeapStartGPU.Offset(-1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-
-
-CD3DX12_GPU_DESCRIPTOR_HANDLE depthHeapStartGPU(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-depthHeapStartGPU.Offset(0, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-
-commandList->SetGraphicsRootDescriptorTable(1, depthHeapStartGPU);
-
-// Draw Call #3
-
-// Swap Vertex buffers and Index buffers, we are drawing a quad:
-commandList->IASetVertexBuffers(0, 1, &quad_vertex_buffer_view);
-commandList->IASetIndexBuffer(&quad_index_buffer_view);
-
-// Draw the quad off in center
-update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
-CopyMemory(pCBVBytes[5], &cBuffer, sizeof(cBuffer));
-commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[5]->GetGPUVirtualAddress());
-commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
-
-
-// Draw the quad off to the right
-//update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
-//CopyMemory(pCBVBytes[5], &cBuffer, sizeof(cBuffer));
-//commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[5]->GetGPUVirtualAddress());
-//commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
-        }
-*/

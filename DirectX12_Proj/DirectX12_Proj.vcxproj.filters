@@ -60,6 +60,9 @@
     <Image Include="checkboard.dds">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="ice.dds">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="VS.hlsl">

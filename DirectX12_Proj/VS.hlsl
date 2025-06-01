@@ -110,3 +110,22 @@ VertexOut VSMainOutline(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOO
 
     return vOut;
 }
+
+VertexOut VSReflect(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, float3 n : NORMAL)
+{
+    VertexOut vOut;
+    
+    float4 ModelP = mul(float4(p, 1.0f), Model);
+    
+    vOut.shadowPos = mul(ModelP, LightViewProjTextureSpace);
+    vOut.pos = mul(ModelP, PerspectiveViewProj);
+    
+    vOut.col = c;
+    vOut.uv = uv;
+    vOut.pixelPos = mul(float4(p, 1.0f), Model);
+    vOut.normal = normalize(mul(n, (float3x3) Model));
+
+    return vOut;
+
+    return vOut;
+}

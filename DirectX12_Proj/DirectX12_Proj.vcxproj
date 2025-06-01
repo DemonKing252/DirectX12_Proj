@@ -140,6 +140,7 @@
   <ItemGroup>
     <Image Include="checkboard.dds" />
     <Image Include="DirectX12_Proj.ico" />
+    <Image Include="ice.dds" />
     <Image Include="small.ico" />
     <Image Include="Stone.dds" />
   </ItemGroup>
