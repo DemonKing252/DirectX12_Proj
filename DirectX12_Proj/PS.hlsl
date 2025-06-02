@@ -37,7 +37,7 @@ cbuffer ConstantBuffer : register(b0)
     float4x4 Proj;
     Light directionalLight;
     float4 CameraPosition;
-    float3 garbagePadding;
+    float3 objectPosition;
     float schilickFresenel;
 }
 
@@ -111,7 +111,7 @@ LightResult ComputeLighting(float3 normal, float3 pixelPos)
     float3 pixelToLight = -directionalLight.Direction;
 
     
-    float diffuse = saturate(max(dot(normal, pixelToLight), 0.0)) * 0.7f;
+    float diffuse = saturate(max(dot(normal, pixelToLight), 0.0)) * 1.0f;
     float dist = length(directionalLight.Position - pixelPos);
     float falloffstart = 0.01f;
     float falloffend = 3.0f;
@@ -137,7 +137,7 @@ float4 PSMainOpaque(VertexIn vIn) : SV_TARGET
     
     LightResult light_result = ComputeLighting(vIn.normal, vIn.pixelPos);
     
-    float3 lightResult = saturate(light_result.Ambient + light_result.Diffuse + light_result.Specular);
+    float3 lightResult = (light_result.Ambient + light_result.Diffuse + light_result.Specular);
     float3 texUV = tex.Sample(texSampl, vIn.uv).xyz;
     
     float shadowFactor = max(ComputeShadowFactor(vIn.shadowPos), 0.4f);
@@ -147,7 +147,7 @@ float4 PSMainOpaque(VertexIn vIn) : SV_TARGET
     
     // Disable Diffuse & Specular light if shadow appears
     if (shadowFactor < 0.5f)
-        lightResult = float3(0.6f, 0.6f, 0.6f);
+        lightResult = float3(0.4f, 0.4f, 0.4f);
         
     
     float3 returnColor = shadowFactor.xxx * lightResult * texUV;
@@ -160,7 +160,7 @@ float4 PSMainOpaque(VertexIn vIn) : SV_TARGET
     float3 reflectColor = skyboxCube.Sample(texSampl, reflectedDirSkybox);
     
     //float reflectiveness = 0.9;
-    float3 finalColor = lerp(returnColor, reflectColor, schilickFresenel);
+    float3 finalColor = lerp(returnColor, reflectColor, schilickFresenel) * lightResult;
     
     return float4(finalColor, 1.0f);
 }
@@ -178,10 +178,10 @@ float4 PSMainDepthCamera(VertexIn vIn) : SV_TARGET
     
     float4 depthValue = shadowMap.Sample(texSampl, vIn.uv);
     
-    float4 colorValue = reflectMap.Sample(texSampl, dirX);
+    //float4 colorValue = reflectMap.Sample(texSampl, dirX);
     //float4 colorValue = reflectMap.Sample(texSampl, vIn.uv);
     
-    return float4(colorValue.xyz, 1.0f);
+    return float4(depthValue.xxx, 1.0f);
 }
 
 
@@ -221,7 +221,7 @@ float4 PSReflect(VertexIn vIn) : SV_TARGET
 {
     LightResult light_result = ComputeLighting(vIn.normal, vIn.pixelPos);
     
-    float3 lightResult = saturate(light_result.Ambient + light_result.Diffuse + light_result.Specular);
+    float3 lightResult = (light_result.Ambient + light_result.Diffuse + light_result.Specular);
     
     
     
@@ -238,21 +238,27 @@ float4 PSReflect(VertexIn vIn) : SV_TARGET
     //float3 returnColor = shadowFactor.xxx * lightResult * texUV;
     
     
-    float3 viewDir = normalize(CameraPosition.xyz - vIn.pixelPos);
-    float3 reflectedDir = reflect(-viewDir, normalize(vIn.normal));
-    
-    float sx = 1.0f; // fixed major axis for +X face
-    float sy = 1.0f - 2.0f * vIn.uv.x; // invert u for y-axis
-    float sz = 1.0f - 2.0f * vIn.uv.y; // invert v for z-axis
+    //float3 viewDir = normalize(CameraPosition.xyz - vIn.pixelPos);
+    //float3 reflectedDir = reflect(-viewDir, normalize(vIn.normal));
+    //
+    //float sx = 1.0f; // fixed major axis for +X face
+    //float sy = 1.0f - 2.0f * vIn.uv.x; // invert u for y-axis
+    //float sz = 1.0f - 2.0f * vIn.uv.y; // invert v for z-axis
     
     
     float3 viewDirSkybox = normalize(CameraPosition.xyz - vIn.pixelPos.xyz);
     float3 reflectedDirSkybox = reflect(-viewDirSkybox, normalize(vIn.normal));
-    //reflectedDirSkybox.xy *= 0.5f;
     reflectedDirSkybox = normalize(reflectedDirSkybox);
     
+    float3 cubeCenter = objectPosition; // + vIn.normal;
+    
+    float parallaxScale = 2.0f;
+    float3 offset = (vIn.pixelPos - cubeCenter) * parallaxScale;
+    
+    float3 correctedDir = normalize(reflectedDirSkybox + offset);
     //float3 reflectiveMap = reflectMap.Sample(texSampl, vIn.uv).xyz;
-    float3 reflectiveMap = reflectMap.Sample(texSampl, reflectedDirSkybox).xyz;
+    float3 reflectiveMap = reflectMap.Sample(texSampl, correctedDir).xyz;
+    //float3 reflectiveMap = reflectMap.Sample(texSampl, correctedDir).xyz;
     //float3 reflectiveMap = reflectMap.Sample(texSampl, float3(sx, sy, sz)).xyz;
     //
     
@@ -264,7 +270,7 @@ float4 PSReflect(VertexIn vIn) : SV_TARGET
      // glassy but not mirror-like
     //float fresnel = pow(1.0 - saturate(dot(viewDir, vIn.normal)), 5.0);
     
-    float3 finalColor = lerp(texUV, reflectiveMap, schilickFresenel);
+    float3 finalColor = lerp(texUV, reflectiveMap, schilickFresenel) * lightResult;
     //float3 finalColor = SampleTexture3D(vIn.pixelPos.xyz, normalize(vIn.normal), tex);
     
     
@@ -281,24 +287,28 @@ float4 PSReflect(VertexIn vIn) : SV_TARGET
 float4 PSSkybox(VertexIn vIn) : SV_TARGET
 {
     
-    LightResult light_result = ComputeLighting(vIn.normal, vIn.pixelPos);
-    
-    float3 lightResult = saturate(light_result.Ambient + light_result.Diffuse + light_result.Specular);
-    float3 texUV = tex.Sample(texSampl, vIn.uv).xyz;
-    
-    float shadowFactor = max(ComputeShadowFactor(vIn.shadowPos), 0.4f);
-    
-    if (light_result.Diffuse.x < 0.1f)
-        shadowFactor = 0.4f;
-    
-    // Disable Diffuse & Specular light if shadow appears
-    if (shadowFactor < 0.5f)
-        lightResult = float3(0.6f, 0.6f, 0.6f);
-        
-    
-    float3 returnColor = shadowFactor.xxx * lightResult * texUV;
+    //LightResult light_result = ComputeLighting(vIn.normal, vIn.pixelPos);
+    //
+    //float3 lightResult = saturate(light_result.Ambient + light_result.Diffuse + light_result.Specular);
+    //float3 texUV = tex.Sample(texSampl, vIn.uv).xyz;
+    //
+    //float shadowFactor = max(ComputeShadowFactor(vIn.shadowPos), 0.4f);
+    //
+    //if (light_result.Diffuse.x < 0.1f)
+    //    shadowFactor = 0.4f;
+    //
+    //// Disable Diffuse & Specular light if shadow appears
+    //if (shadowFactor < 0.5f)
+    //    lightResult = float3(0.6f, 0.6f, 0.6f);
+    //    
+    //
+    //float3 returnColor = shadowFactor.xxx * lightResult * texUV;
     
     float3 skyBoxUV = skyboxCube.Sample(texSampl, vIn.cubeUV);
     
     return float4(skyBoxUV, 1.0f);
+}
+float4 PSLight(VertexIn vIn) : SV_TARGET
+{
+    return float4(1.0f, 1.0f, 0.0f, 1.0f);
 }

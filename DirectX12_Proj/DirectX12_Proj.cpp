@@ -49,12 +49,20 @@ struct ConstantBuffer
     XMMATRIX Proj;
     Light directionalLight;
     XMFLOAT4 CameraPosition;
-    XMFLOAT3 garbagePadding;
+    XMFLOAT3 objectPosition;
     float schilickFresenel;
 };
-const int g_iWidth = 1024;
-const int g_iHeight = 1024;
+const float g_iWidth = 1024;
+const float g_iHeight = 1024;
 
+const float g_iShadowWidth = 1024;
+const float g_iShadowHeight = 1024;
+
+const float g_iReflectWidth = 1024;
+const float g_iReflectHeight = 1024;
+
+const float g_iSwapChainWidth = 1024;
+const float g_iSwapChainHeight = 1024;
 
 XMVECTOR eyePos;
 XMMATRIX view, model, proj, modelNormal;
@@ -139,6 +147,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             Theta -= (float)mouseDeltaY * 0.14f;
             Phi -= (float)mouseDeltaX * 0.14f;
+
+            Theta = max(min(Theta, 89.9f), -89.9f);
 
             //if (Phi < 0.3f) Phi = 0.3f;
             //if (Phi > 179.0f) Phi = 179.0f;
@@ -314,6 +324,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     eyePos = XMLoadFloat4(&temp);
 
+    //CreateWindowW(szWindowClass, L"D3D12 Shadow Mapping", WS_OVERLAPPEDWINDOW,
+    //    CW_USEDEFAULT, 0, g_iWidth, g_iHeight, nullptr, nullptr, hInstance, nullptr);
+    //ShowWindow(hWnd, 0);
+
+    SetWindowPos(hWnd, NULL, 100, 100, 1024, 768, SWP_NOZORDER | SWP_NOACTIVATE);
+   
     // DirectX 12 init:
     ID3D12Device* device = nullptr;
     IDXGIFactory2* factory = nullptr;
@@ -362,8 +378,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     DXGI_SWAP_CHAIN_DESC1 swapchaindesc;
     ZeroMemory(&swapchaindesc, sizeof(DXGI_SWAP_CHAIN_DESC1));
 
-    swapchaindesc.Width = g_iWidth;
-    swapchaindesc.Height = g_iHeight;
+    swapchaindesc.Width = g_iSwapChainWidth;
+    swapchaindesc.Height = g_iSwapChainHeight;
     swapchaindesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     swapchaindesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapchaindesc.BufferCount = 3;
@@ -689,8 +705,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
         depthDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
         depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-        depthDesc.Width = g_iWidth;
-        depthDesc.Height = g_iHeight;
+        depthDesc.Width = g_iShadowWidth;
+        depthDesc.Height = g_iShadowHeight;
         depthDesc.MipLevels = 1;
         depthDesc.DepthOrArraySize = 1;
         depthDesc.SampleDesc.Count = 1;
@@ -740,8 +756,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     //texDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
     
     texDesc.Alignment = 0;
-    texDesc.Width = g_iWidth;
-    texDesc.Height = g_iHeight;
+    texDesc.Width = g_iReflectWidth;
+    texDesc.Height = g_iReflectHeight;
     texDesc.DepthOrArraySize = 6;
     texDesc.MipLevels = 1;
     texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;    // Not using D24G8 typeless unlike the shadow depth buffer
@@ -804,7 +820,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
 
-    float dist = 10.0f;
+    float dist = 15.0f;
     cBuffer.directionalLight.Position = XMFLOAT3(0.0f, dist, -dist);
     // Light Projection
     auto update_shadow_object = [&](XMFLOAT3 Translate, float Rotation, XMFLOAT3 Scale = XMFLOAT3(1.0f, 1.0f, 1.0f))
@@ -860,7 +876,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
         cBuffer.LightViewProj = XMMatrixTranspose(lightView * lightProjection);
         cBuffer.LightViewProjTextureSpace = XMMatrixTranspose(lightView * lightProjection * T);
-        
+
+        cBuffer.objectPosition = Translate;
     };
     //float angle = 0.0f;
     auto update_world_matrix = [&](XMFLOAT3 Translate, float Rotation, XMFLOAT3 Scale = XMFLOAT3(1.0f, 1.0f, 1.0f))
@@ -878,7 +895,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         // Projection Matrix
         float fovAngleY = XMConvertToRadians(90.0f); // 45 degree FOV vertical
         float aspectRatio = g_iWidth / g_iHeight;            // Width / Height of viewport
-        float nearZ = 0.1f;
+        float nearZ = 0.001f;
         float farZ = 900.0f;
 
         proj = XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, nearZ, farZ);
@@ -902,6 +919,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         cBuffer.View = XMMatrixTranspose(viewNoTranslate);
         cBuffer.Proj = XMMatrixTranspose(proj);
 
+        cBuffer.objectPosition = Translate;
     };
 
     //XMFLOAT3 reflectionEye;
@@ -931,8 +949,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
         // Projection Matrix
         float fovAngleY = XMConvertToRadians(90.0f); // 45 degree FOV vertical
-        float aspectRatio = 1.0f;            // Width / Height of viewport
-        float nearZ = 0.1f;
+        float aspectRatio = g_iReflectWidth / g_iReflectHeight;            // Width / Height of viewport
+        float nearZ = 0.001f;
         float farZ = 100.0f;
 
         proj = XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, nearZ, farZ);
@@ -1197,6 +1215,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ComPtr<ID3DBlob> vs_skybox;
     ComPtr<ID3DBlob> ps_skybox;
 
+    ComPtr<ID3DBlob> vs_light;
+    ComPtr<ID3DBlob> ps_light;
+
     ComPtr<ID3DBlob> errors;
 
     HRESULT hr;
@@ -1279,6 +1300,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         OutputDebugStringA((char*)errors->GetBufferPointer());
         __debugbreak();
     }
+    hr = D3DCompileFromFile(L"VS.hlsl", nullptr, nullptr, "VSLight", "vs_5_0", D3DCOMPILE_DEBUG, 0, &vs_light, &errors);
+    if (FAILED(hr))
+    {
+        OutputDebugStringA((char*)errors->GetBufferPointer());
+        __debugbreak();
+    }
+
+    hr = D3DCompileFromFile(L"PS.hlsl", nullptr, nullptr, "PSLight", "ps_5_0", D3DCOMPILE_DEBUG, 0, &ps_light, &errors);
+    if (FAILED(hr))
+    {
+        OutputDebugStringA((char*)errors->GetBufferPointer());
+        __debugbreak();
+    }
 
     // step 14 - input layout that describes how our vertex buffer is layed out
 
@@ -1345,6 +1379,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ID3D12PipelineState* outlineStencilPSOState;
     ID3D12PipelineState* reflectObjectPipelineState;
     ID3D12PipelineState* skyboxPipelineState;
+    ID3D12PipelineState* lightPipelineState;
 
     opaquePsoDesc.pRootSignature = rootSignature;
     opaquePsoDesc.InputLayout = { inputLayout, _countof(inputLayout) };
@@ -1375,6 +1410,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ThrowIfFailed(device->CreateGraphicsPipelineState(&skyBoxPSODesc, IID_PPV_ARGS(&skyboxPipelineState)));
 
 
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC lightPSODesc = opaquePsoDesc;
+    lightPSODesc.VS = { vs_light->GetBufferPointer(), vs_light->GetBufferSize() };
+    lightPSODesc.PS = { ps_light->GetBufferPointer(), ps_light->GetBufferSize() };
+    lightPSODesc.DepthStencilState.StencilEnable = false;   // No stenciling
+    //lightPSODesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+    //skyBoxPSODesc.DepthStencilState = opaqueDepthStencilViewDesc;
+
+    ThrowIfFailed(device->CreateGraphicsPipelineState(&lightPSODesc, IID_PPV_ARGS(&lightPipelineState)));
+
+
     D3D12_GRAPHICS_PIPELINE_STATE_DESC reflectiveObjectPSODesc = opaquePsoDesc;
     reflectiveObjectPSODesc.VS = { vs_reflect_map->GetBufferPointer(), vs_reflect_map->GetBufferSize() };
     reflectiveObjectPSODesc.PS = { ps_reflect_map->GetBufferPointer(), ps_reflect_map->GetBufferSize() };
@@ -1396,7 +1441,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     shadowCameraPsoDesc.DepthStencilState = opaqueDepthViewDesc;
 
     D3D12_RASTERIZER_DESC shadowRasterizerDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-    shadowRasterizerDesc.DepthBias = 10000;           // e.g. 1000
+    shadowRasterizerDesc.DepthBias = 50000;           // e.g. 1000
     shadowRasterizerDesc.DepthBiasClamp = 0.0f;
     shadowRasterizerDesc.SlopeScaledDepthBias = 1.0f;             // tweak this to reduce acne but avoid peter-panning
     shadowRasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
@@ -1456,10 +1501,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UINT64 fenceValue = 0;
     UINT64 frame = 0;
     cBuffer.schilickFresenel = 0.0f;
+    float light_angle = 0.0f;
+
     while (msg.message != WM_QUIT)
     {
-    
+        light_angle += 0.05f;
         angle += 0.2f;
+
+        //float dist = 10.0f;
+        cBuffer.directionalLight.Position = XMFLOAT3(dist * cos(XMConvertToRadians(light_angle)), 6.0f, dist * sin(XMConvertToRadians(light_angle)));
     
         ThrowIfFailed(swapChain->QueryInterface(IID_PPV_ARGS(&swapChain3)));
         back_buffer_index = swapChain3->GetCurrentBackBufferIndex();
@@ -1623,18 +1673,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
             // Draw Call #2 - Cube
 
-            commandList->OMSetStencilRef(1);
-            cbvIndex++;
-            commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-            update_reflective_scene(XMFLOAT3(-1.0f, 2.0f, 0.0f), +angle, XMFLOAT3(7.0f, 1.0f, 7.0f), XMFLOAT3(0.0, 0.5f, 0.0f), lookDirections[faceIndex], upVectors[faceIndex]);
-            CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
-            commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
-            commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
+            //cbvIndex++;
+            //commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            //update_reflective_scene(XMFLOAT3(-1.0f, 2.0f, 0.0f), +angle, XMFLOAT3(7.0f, 1.0f, 7.0f), XMFLOAT3(0.0, 0.5f, 0.0f), lookDirections[faceIndex], upVectors[faceIndex]);
+            //CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
+            //commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
+            //commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
 
 
             // Draw Call #3 - Cube
             cbvIndex++;
-            commandList->OMSetStencilRef(2);
             commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
             update_reflective_scene(XMFLOAT3(1.0f, 2.0f, 0.0f), -angle, XMFLOAT3(7.0f, 1.0f, 7.0f), XMFLOAT3(0.0, 0.5f, 0.0f), lookDirections[faceIndex], upVectors[faceIndex]);
             CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
@@ -1787,10 +1835,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
         commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
 
-        commandList->SetPipelineState(opaquePipelineState);
-
+        
         // Draw Call #5 - Debug Light Position
         cbvIndex++;
+        commandList->SetPipelineState(lightPipelineState);
         commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
         update_world_matrix(cBuffer.directionalLight.Position, 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
         CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));

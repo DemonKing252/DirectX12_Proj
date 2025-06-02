@@ -31,7 +31,7 @@ cbuffer ConstantBuffer : register(b0)
     float4x4 Proj;
     Light directionalLight;
     float4 CameraPosition;
-    float3 garbagePadding;
+    float3 objectPosition;
     float schilickFresenel;
 }
 
@@ -128,6 +128,7 @@ VertexOut VSReflect(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, 
     vOut.col = c;
     vOut.uv = uv;
     vOut.pixelPos = mul(float4(p, 1.0f), Model);
+    vOut.cubeUV = p;
     vOut.normal = normalize(mul(n, (float3x3) Model));
 
     return vOut;
@@ -157,6 +158,24 @@ VertexOut VSSkybox(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, f
     vOut.normal = normalize(mul(n, (float3x3) Model));
     
     vOut.cubeUV = float3(p);
+
+    return vOut;
+}
+VertexOut VSLight(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, float3 n : NORMAL)
+{
+    VertexOut vOut;
+    
+    float4 ModelP = mul(float4(p, 1.0f), Model);
+    
+    vOut.shadowPos = mul(ModelP, LightViewProjTextureSpace);
+    
+    //vOut.pos = mul(ModelP, LightViewProj);
+    vOut.pos = mul(ModelP, PerspectiveViewProj);
+    
+    vOut.col = c;
+    vOut.uv = uv;
+    vOut.pixelPos = mul(float4(p, 1.0f), Model);
+    vOut.normal = normalize(mul(n, (float3x3) Model));
 
     return vOut;
 }
