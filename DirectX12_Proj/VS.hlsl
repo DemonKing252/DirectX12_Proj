@@ -7,6 +7,7 @@ struct VertexOut
     float2 uv : UVCOORD;
     float3 normal : NORMAL;
     float3 pixelPos : POSITION;
+    float3 cubeUV : CUBEUV;
 };
 
 struct Light
@@ -26,8 +27,12 @@ cbuffer ConstantBuffer : register(b0)
     float4x4 LightViewProj;
     float4x4 LightViewProjTextureSpace;
     float4x4 PerspectiveViewProj;
+    float4x4 View;
+    float4x4 Proj;
     Light directionalLight;
     float4 CameraPosition;
+    float3 garbagePadding;
+    float schilickFresenel;
 }
 
 VertexOut VSMainOpaque(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, float3 n : NORMAL)
@@ -126,6 +131,32 @@ VertexOut VSReflect(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, 
     vOut.normal = normalize(mul(n, (float3x3) Model));
 
     return vOut;
+}
+VertexOut VSSkybox(float3 p : POSITION, float3 c : COLOR, float2 uv : UVCOORD, float3 n : NORMAL)
+{
+    VertexOut vOut;
+    
+    float4 ModelP = mul(float4(p, 1.0f), Model);
+    
+    
+    // Model matrix, but only with rotation, not translation
+    float3 SkyP = mul(p, (float3x3) Model);
+    
+    // View matrix but only with rotation, no translation
+    float4 posView = mul(float4(mul(p, (float3x3) View), 1.0f), Proj);
+    
+    vOut.shadowPos = mul(ModelP, LightViewProjTextureSpace);
+    
+    //vOut.pos = float4(SkyP, 1.0f);
+    vOut.pos = mul(ModelP, PerspectiveViewProj);
+    //vOut.pos = mul(float4(p, 1.0f), mul((float4x4)View, Proj));
+    
+    vOut.col = c;
+    vOut.uv = uv;
+    vOut.pixelPos = mul(float4(p, 1.0f), Model);
+    vOut.normal = normalize(mul(n, (float3x3) Model));
+    
+    vOut.cubeUV = float3(p);
 
     return vOut;
 }

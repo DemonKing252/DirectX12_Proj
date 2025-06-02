@@ -139,10 +139,12 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="checkboard.dds" />
+    <Image Include="desertcube1024.dds" />
     <Image Include="DirectX12_Proj.ico" />
     <Image Include="ice.dds" />
     <Image Include="small.ico" />
     <Image Include="Stone.dds" />
+    <Image Include="sunsetcube1024.dds" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="PS.hlsl">

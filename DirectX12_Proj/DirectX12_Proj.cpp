@@ -1,4 +1,4 @@
-// DirectX12_Proj.cpp : Defines the entry point for the application.
+﻿// DirectX12_Proj.cpp : Defines the entry point for the application.
 //
 
 #include "framework.h"
@@ -45,11 +45,15 @@ struct ConstantBuffer
     XMMATRIX LightViewProj;
     XMMATRIX LightViewProjTextureSpace;
     XMMATRIX PerspectiveViewProj;
+    XMMATRIX View;
+    XMMATRIX Proj;
     Light directionalLight;
     XMFLOAT4 CameraPosition;
+    XMFLOAT3 garbagePadding;
+    float schilickFresenel;
 };
 const int g_iWidth = 1024;
-const int g_iHeight = 768;
+const int g_iHeight = 1024;
 
 
 XMVECTOR eyePos;
@@ -83,21 +87,109 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
         }                                                               \
     } while (0)
 
+int mouseDeltaX = 0;
+int mouseDeltaY = 0;
 
+int currMouseX = 0;
+int currMouseY = 0;
+
+int lastMouseX = 0;
+int lastMouseY = 0;
+float Theta = 30.0f;
+float Phi = -90.0f;
+
+bool isDraggingLeft = false;
+bool isDraggingRight = false;
+float radius = 8.0f;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    XMFLOAT4 eyeP;
     switch (message)
     {
+    case WM_RBUTTONUP:
+        isDraggingRight = false;
+        break;
+    case WM_RBUTTONDOWN:
+        isDraggingRight = true;
+        lastMouseX = LOWORD(lParam);
+        lastMouseY = HIWORD(lParam);
+        break;
+    case WM_LBUTTONUP:
+        isDraggingLeft = false;
+        break;
+    case WM_LBUTTONDOWN:
+        isDraggingLeft = true;
+        lastMouseX = LOWORD(lParam);
+        lastMouseY = HIWORD(lParam);
+        break;
+    case WM_MOUSEMOVE:
+        if (isDraggingLeft)
+        {
+            //x = r x sin (Phi) x cos(Theta)
+            //y = r x sin (Phi) x sin(Theta)
+            //z = r x cos (Phi)
+            currMouseX = LOWORD(lParam);
+            currMouseY = HIWORD(lParam);
+
+            mouseDeltaX = currMouseX - lastMouseX;
+            mouseDeltaY = currMouseY - lastMouseY;
+
+            lastMouseX = currMouseX;
+            lastMouseY = currMouseY;
+
+            Theta -= (float)mouseDeltaY * 0.14f;
+            Phi -= (float)mouseDeltaX * 0.14f;
+
+            //if (Phi < 0.3f) Phi = 0.3f;
+            //if (Phi > 179.0f) Phi = 179.0f;
+
+            XMStoreFloat4(&eyeP, eyePos);
+            eyeP.x = radius * cos(XMConvertToRadians(Phi)) * cos(XMConvertToRadians(Theta));
+            eyeP.y = radius * sin(XMConvertToRadians(Theta));
+            eyeP.z = radius * sin(XMConvertToRadians(Phi)) * cos(XMConvertToRadians(Theta));
+            eyeP.w = 1.0f;
+            eyePos = XMLoadFloat4(&eyeP);
+            cBuffer.CameraPosition = eyeP;
+        }
+        if (isDraggingRight)
+        {
+
+            currMouseX = LOWORD(lParam);
+            currMouseY = HIWORD(lParam);
+
+            mouseDeltaX = currMouseX - lastMouseX;
+            mouseDeltaY = currMouseY - lastMouseY;
+
+            lastMouseX = currMouseX;
+            lastMouseY = currMouseY;
+
+            radius += (float)mouseDeltaY * 0.07f;
+            
+            if (radius > 16.0f) radius = 16.0f;
+            if (radius < 1.0f) radius = 1.0f;
+
+            XMStoreFloat4(&eyeP, eyePos);
+            eyeP.x = radius * cos(XMConvertToRadians(Phi)) * cos(XMConvertToRadians(Theta));
+            eyeP.y = radius * sin(XMConvertToRadians(Theta));
+            eyeP.z = radius * sin(XMConvertToRadians(Phi)) * cos(XMConvertToRadians(Theta));
+            eyeP.w = 1.0f;
+            eyePos = XMLoadFloat4(&eyeP);
+            cBuffer.CameraPosition = eyeP;
+        }
+
+        break;
+
     case WM_KEYDOWN:
 
-        XMFLOAT4 eyeP;
-        XMStoreFloat4(&eyeP, eyePos);
+        //XMFLOAT4 eyeP;
+        //XMStoreFloat4(&eyeP, eyePos);
 
         if (wParam == VK_ESCAPE)
         {
             PostQuitMessage(0);
             return 0;
         }
+        /*
         if (wParam == 'W')
         {
             eyeP.z += 0.1f;
@@ -122,6 +214,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             eyeP.y += 0.1f;
         }
+        */
+        
 
         // Light
         if (wParam == 'I')
@@ -149,7 +243,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             cBuffer.directionalLight.Position.y += 0.1f;
         }
 
-        eyePos = XMLoadFloat4(&eyeP);
+        //eyePos = XMLoadFloat4(&eyeP);
         break;
 
     case WM_COMMAND:
@@ -211,7 +305,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_DIRECTX12PROJ));
 
     MSG msg = { 0 };
+    
+    XMFLOAT4 temp;
+    temp.x = 8.0f * cos(XMConvertToRadians(Phi)) * cos(XMConvertToRadians(Theta));
+    temp.y = 8.0f * sin(XMConvertToRadians(Theta));
+    temp.z = 8.0f * sin(XMConvertToRadians(Phi)) * cos(XMConvertToRadians(Theta));
+    temp.w = 1.0f;
 
+    eyePos = XMLoadFloat4(&temp);
 
     // DirectX 12 init:
     ID3D12Device* device = nullptr;
@@ -635,17 +736,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ZeroMemory(&texDesc, sizeof(D3D12_RESOURCE_DESC));
 
     texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    
+    //texDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+    
     texDesc.Alignment = 0;
     texDesc.Width = g_iWidth;
     texDesc.Height = g_iHeight;
-    texDesc.DepthOrArraySize = 1;
+    texDesc.DepthOrArraySize = 6;
     texDesc.MipLevels = 1;
     texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;    // Not using D24G8 typeless unlike the shadow depth buffer
     texDesc.SampleDesc.Count = 1;
     texDesc.SampleDesc.Quality = 0;
     texDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
     texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    texDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    //texDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
     D3D12_CLEAR_VALUE refClear;
     ZeroMemory(&refClear, sizeof(D3D12_CLEAR_VALUE));
@@ -669,12 +773,35 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     D3D12_DESCRIPTOR_HEAP_DESC reflectiveMapHeapRTVDesc;
     ZeroMemory(&reflectiveMapHeapRTVDesc, sizeof(D3D12_DESCRIPTOR_HEAP_DESC));
-    reflectiveMapHeapRTVDesc.NumDescriptors = 1;
+    reflectiveMapHeapRTVDesc.NumDescriptors = 6;
     reflectiveMapHeapRTVDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 
     ThrowIfFailed(device->CreateDescriptorHeap(&reflectiveMapHeapRTVDesc, IID_PPV_ARGS(&reflectiveMapHeapRTV)));
 
-    device->CreateRenderTargetView(reflectiveMapResource.Get(), nullptr, reflectiveMapHeapRTV->GetCPUDescriptorHandleForHeapStart());
+    for (UINT face = 0; face < 6; face++)
+    {
+        //D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
+        //ZeroMemory(&rtvDesc, sizeof(D3D12_RENDER_TARGET_VIEW_DESC));
+        //
+        //rtvDesc.Format = texDesc.Format;
+        //rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+        //rtvDesc.Texture2DArray.FirstArraySlice = 0;
+        //rtvDesc.Texture2DArray.ArraySize = 1;
+
+        D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
+        ZeroMemory(&rtvDesc, sizeof(D3D12_RENDER_TARGET_VIEW_DESC));
+        
+        rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+        rtvDesc.Texture2DArray.FirstArraySlice = face;
+        rtvDesc.Texture2DArray.ArraySize = 1;
+        
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandleReflect(reflectiveMapHeapRTV->GetCPUDescriptorHandleForHeapStart());
+        rtvHandleReflect.Offset(face, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+
+        device->CreateRenderTargetView(reflectiveMapResource.Get(), &rtvDesc, rtvHandleReflect);
+    }
+
 
 
     float dist = 10.0f;
@@ -749,10 +876,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         view = XMMatrixLookAtLH(eyePos, focusPos, upDir);
 
         // Projection Matrix
-        float fovAngleY = XMConvertToRadians(45.0f); // 45 degree FOV vertical
+        float fovAngleY = XMConvertToRadians(90.0f); // 45 degree FOV vertical
         float aspectRatio = g_iWidth / g_iHeight;            // Width / Height of viewport
         float nearZ = 0.1f;
-        float farZ = 100.0f;
+        float farZ = 900.0f;
 
         proj = XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, nearZ, farZ);
 
@@ -769,19 +896,26 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         cBuffer.Model = XMMatrixTranspose(model);
         //cBuffer.PerspectiveViewProj = XMMatrixTranspose(XMMatrixMultiply(view, proj));
         cBuffer.PerspectiveViewProj = XMMatrixTranspose(XMMatrixMultiply(view, proj));
-        
+        XMMATRIX viewNoTranslate = view;
+        viewNoTranslate.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+
+        cBuffer.View = XMMatrixTranspose(viewNoTranslate);
+        cBuffer.Proj = XMMatrixTranspose(proj);
 
     };
 
     //XMFLOAT3 reflectionEye;
     //XMFLOAT3 reflectionLook;
-    auto update_reflective_scene = [&](XMFLOAT3 Translate, float Rotation, XMFLOAT3 Scale, XMFLOAT3 eye, XMFLOAT3 lookDirection)
+    auto update_reflective_scene = [&](XMFLOAT3 Translate, float Rotation, XMFLOAT3 Scale, XMFLOAT3 eye, XMFLOAT3 lookDirection, XMFLOAT3 upVec)
     {
         update_shadow_object(Translate, Rotation, Scale);
 
         // View Matrix
         //eyePos = XMVectorSet(0.0f, +3.0f, -6.0f, 0.0f);  // Camera position
-        XMVECTOR upDir = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);   // Up direction
+        XMVECTOR upDir;
+        upDir = XMLoadFloat3(&upVec);
+        
+        //= XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);   // Up direction
 
         XMVECTOR reflectLook = XMVectorSet(
             eye.x + lookDirection.x,
@@ -790,14 +924,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             1.0f
         );
         
-        XMVECTOR reflectEye = XMVectorSet(eye.x, eye.y, eye.z, 0.0f);   // Where camera looks
+        XMVECTOR reflectEye = XMVectorSet(eye.x, eye.y, eye.z, 1.0f);   // Where camera looks
 
 
         view = XMMatrixLookAtLH(reflectEye, reflectLook, upDir);
 
         // Projection Matrix
-        float fovAngleY = XMConvertToRadians(45.0f); // 45 degree FOV vertical
-        float aspectRatio = g_iWidth / g_iHeight;            // Width / Height of viewport
+        float fovAngleY = XMConvertToRadians(90.0f); // 45 degree FOV vertical
+        float aspectRatio = 1.0f;            // Width / Height of viewport
         float nearZ = 0.1f;
         float farZ = 100.0f;
 
@@ -829,7 +963,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // step 1: load the texture into a resource and upload heap
     ID3D12DescriptorHeap* textureDescriptorHeap = nullptr;
     D3D12_DESCRIPTOR_HEAP_DESC srvDesc = { };
-    srvDesc.NumDescriptors = 5;
+    srvDesc.NumDescriptors = 6;
     srvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     srvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
@@ -844,12 +978,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ComPtr<ID3D12Resource> iceResourceView = nullptr;
     ComPtr<ID3D12Resource> iceUploadHeap = nullptr;
 
+    ComPtr<ID3D12Resource> sunsetResourceView = nullptr;
+    ComPtr<ID3D12Resource> sunsetUploadHeap = nullptr;
+
     ThrowIfFailed(commandAllocator->Reset());
     ThrowIfFailed(commandList->Reset(commandAllocator, nullptr));
 
     ThrowIfFailed(CreateDDSTextureFromFile12(device, commandList, L"checkboard.dds", checkboardResourceView, checkboardUploadHeap));
     ThrowIfFailed(CreateDDSTextureFromFile12(device, commandList, L"Stone.dds", stoneResourceView, stoneUploadHeap));
     ThrowIfFailed(CreateDDSTextureFromFile12(device, commandList, L"ice.dds", iceResourceView, iceUploadHeap));
+    ThrowIfFailed(CreateDDSTextureFromFile12(device, commandList, L"sunsetcube1024.dds", sunsetResourceView, sunsetUploadHeap));
 
 
     ThrowIfFailed(commandList->Close());
@@ -907,13 +1045,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     device->CreateShaderResourceView(shadowMapResource.Get(), &depthSRVDesc, texHeapStartCPU);
 
 
-    D3D12_SHADER_RESOURCE_VIEW_DESC reflectiveSRVDesc = {};
-    reflectiveSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    reflectiveSRVDesc.Format = texDesc.Format;
-    reflectiveSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    reflectiveSRVDesc.Texture2D.MostDetailedMip = 0;
-    reflectiveSRVDesc.Texture2D.MipLevels = 1;
-    reflectiveSRVDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+    
 
     // Descriptor #4 - reflective CPU handle
     CD3DX12_CPU_DESCRIPTOR_HANDLE reflectiveCPUHandle(textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -922,10 +1054,39 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     CD3DX12_GPU_DESCRIPTOR_HANDLE reflectiveGPUHandle(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
     reflectiveGPUHandle.Offset(4, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
+    D3D12_SHADER_RESOURCE_VIEW_DESC reflectiveSRVDesc = {};
+    reflectiveSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    reflectiveSRVDesc.Format = texDesc.Format;
     
-    // Descriptor #3
+    //reflectiveSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    reflectiveSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+    reflectiveSRVDesc.TextureCube.MostDetailedMip = 0;
+    reflectiveSRVDesc.TextureCube.MipLevels = 1;
+    reflectiveSRVDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+
+    //reflectiveSRVDesc.Texture2D.MostDetailedMip = 0;
+    //reflectiveSRVDesc.Texture2D.MipLevels = 1;
+    //reflectiveSRVDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
     device->CreateShaderResourceView(reflectiveMapResource.Get(), &reflectiveSRVDesc, reflectiveCPUHandle);
+
+
+    // Descriptor #5 - reflective CPU handle
+    CD3DX12_CPU_DESCRIPTOR_HANDLE skyboxTextureCPUHandle(textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+    skyboxTextureCPUHandle.Offset(5, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+
+    CD3DX12_GPU_DESCRIPTOR_HANDLE skyboxTextureGPUHandle(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+    skyboxTextureGPUHandle.Offset(5, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC skyboxSRVDesc;
+    ZeroMemory(&skyboxSRVDesc, sizeof(D3D12_SHADER_RESOURCE_VIEW_DESC));
+
+    skyboxSRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+    skyboxSRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    skyboxSRVDesc.Format = sunsetResourceView->GetDesc().Format;
+    skyboxSRVDesc.TextureCube.MipLevels = sunsetResourceView->GetDesc().MipLevels;
+
+    device->CreateShaderResourceView(sunsetResourceView.Get(), &skyboxSRVDesc, skyboxTextureCPUHandle);
 
     // step 3: sampler state:
     CD3DX12_STATIC_SAMPLER_DESC samplerState[2];
@@ -997,12 +1158,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     reflectTextureRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     reflectTextureRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    CD3DX12_ROOT_PARAMETER rootParameters[5];
+    D3D12_DESCRIPTOR_RANGE cubeMapTextureRange = {};
+    cubeMapTextureRange.BaseShaderRegister = 4; // base register
+    cubeMapTextureRange.NumDescriptors = 1;
+    cubeMapTextureRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    cubeMapTextureRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+
+    CD3DX12_ROOT_PARAMETER rootParameters[6];
     rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
     rootParameters[1].InitAsDescriptorTable(1, &srvTextureRange, D3D12_SHADER_VISIBILITY_ALL);
     rootParameters[2].InitAsDescriptorTable(1, &dsvTextureRange, D3D12_SHADER_VISIBILITY_ALL);
     rootParameters[3].InitAsDescriptorTable(1, &shadowTextureRange, D3D12_SHADER_VISIBILITY_ALL);
     rootParameters[4].InitAsDescriptorTable(1, &reflectTextureRange, D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[5].InitAsDescriptorTable(1, &cubeMapTextureRange, D3D12_SHADER_VISIBILITY_ALL);
 
     root_sig_desc.Init(_countof(rootParameters), rootParameters, _countof(samplerState), samplerState, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
     ThrowIfFailed(D3D12SerializeRootSignature(&root_sig_desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
@@ -1024,6 +1193,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     ComPtr<ID3DBlob> vs_reflect_map;
     ComPtr<ID3DBlob> ps_reflect_map;
+
+    ComPtr<ID3DBlob> vs_skybox;
+    ComPtr<ID3DBlob> ps_skybox;
 
     ComPtr<ID3DBlob> errors;
 
@@ -1094,7 +1266,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         OutputDebugStringA((char*)errors->GetBufferPointer());
         __debugbreak();
     }
+    hr = D3DCompileFromFile(L"VS.hlsl", nullptr, nullptr, "VSSkybox", "vs_5_0", D3DCOMPILE_DEBUG, 0, &vs_skybox, &errors);
+    if (FAILED(hr))
+    {
+        OutputDebugStringA((char*)errors->GetBufferPointer());
+        __debugbreak();
+    }
 
+    hr = D3DCompileFromFile(L"PS.hlsl", nullptr, nullptr, "PSSkybox", "ps_5_0", D3DCOMPILE_DEBUG, 0, &ps_skybox, &errors);
+    if (FAILED(hr))
+    {
+        OutputDebugStringA((char*)errors->GetBufferPointer());
+        __debugbreak();
+    }
 
     // step 14 - input layout that describes how our vertex buffer is layed out
 
@@ -1160,6 +1344,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ID3D12PipelineState* shadowPipelineState;
     ID3D12PipelineState* outlineStencilPSOState;
     ID3D12PipelineState* reflectObjectPipelineState;
+    ID3D12PipelineState* skyboxPipelineState;
 
     opaquePsoDesc.pRootSignature = rootSignature;
     opaquePsoDesc.InputLayout = { inputLayout, _countof(inputLayout) };
@@ -1179,6 +1364,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Stenciling
 
     ThrowIfFailed(device->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&opaquePipelineState)));
+
+
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC skyBoxPSODesc = opaquePsoDesc;
+    skyBoxPSODesc.VS = { vs_skybox->GetBufferPointer(), vs_skybox->GetBufferSize() };
+    skyBoxPSODesc.PS = { ps_skybox->GetBufferPointer(), ps_skybox->GetBufferSize() };
+    skyBoxPSODesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+    //skyBoxPSODesc.DepthStencilState = opaqueDepthStencilViewDesc;
+
+    ThrowIfFailed(device->CreateGraphicsPipelineState(&skyBoxPSODesc, IID_PPV_ARGS(&skyboxPipelineState)));
 
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC reflectiveObjectPSODesc = opaquePsoDesc;
@@ -1258,9 +1452,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UINT64 back_buffer_index = 0;
     IDXGISwapChain3* swapChain3 = nullptr;
     float angle = 30.f;
-    eyePos = XMVectorSet(0.0f, 3.0f, -6.0f, 1.0f);
+    //eyePos = XMVectorSet(0.0f, 3.0f, -6.0f, 1.0f);
     UINT64 fenceValue = 0;
     UINT64 frame = 0;
+    cBuffer.schilickFresenel = 0.0f;
     while (msg.message != WM_QUIT)
     {
     
@@ -1315,6 +1510,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         commandList->SetGraphicsRootDescriptorTable(1, textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
         commandList->SetGraphicsRootDescriptorTable(2, shadowDepthBufferTextureHandle);
         commandList->SetGraphicsRootDescriptorTable(3, shadowDepthBufferTextureHandle);
+        commandList->SetGraphicsRootDescriptorTable(5, skyboxTextureGPUHandle);
 
         // MAY NEED THIS
         // ------------------------------------------------------------------------------------------- Draw Scene from Lights POV --------------------------------------------------------------------------------------------
@@ -1350,23 +1546,44 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         // Shadow Draw Call #4 - Reflective Shadow
         cbvIndex++;
         commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-        update_shadow_object(XMFLOAT3(-3.5f, 0.5f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
+        update_shadow_object(XMFLOAT3(0.0, 0.5f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
         CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
         commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
         commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
     
         // ------------------------------------------------------------------------------------------- Draw Reflective Map Scene --------------------------------------------------------------------------------------------
 
+        XMFLOAT3 lookDirections[6] = {
+            XMFLOAT3(1.0f, 0.0f, 0.0f),   // +X
+            XMFLOAT3(-1.0f, 0.0f, 0.0f),  // -X
+            XMFLOAT3(0.0f, 1.0f, 0.0f),   // +Y
+            XMFLOAT3(0.0f, -1.0f, 0.0f),  // -Y
+            XMFLOAT3(0.0f, 0.0f, 1.0f),   // +Z
+            XMFLOAT3(0.0f, 0.0f, -1.0f)   // -Z
+        };
+        XMFLOAT3 upVectors[6] = {
+            XMFLOAT3(0.0f, 1.0f, 0.0f),    // +X
+            XMFLOAT3(0.0f, 1.0f, 0.0f),    // -X
+            XMFLOAT3(0.0f, 0.0f, -1.0f),   // +Y
+            XMFLOAT3(0.0f, 0.0f, 1.0f),    // -Y
+            XMFLOAT3(0.0f, 1.0f, 0.0f),    // +Z
+            XMFLOAT3(0.0f, 1.0f, 0.0f)     // -Z
+        };
+        for (UINT faceIndex = 0; faceIndex < 6; faceIndex++)
         {
             // Set Pipeline states
             commandList->SetPipelineState(opaquePipelineState);
             commandList->IASetVertexBuffers(0, 1, &quad_vertex_buffer_view);
             commandList->IASetIndexBuffer(&quad_index_buffer_view);
 
-            commandList->OMSetRenderTargets(1, &reflectiveMapHeapRTV->GetCPUDescriptorHandleForHeapStart(), false, nullptr);
+            CD3DX12_CPU_DESCRIPTOR_HANDLE currentFaceHeapRTVHandle(reflectiveMapHeapRTV->GetCPUDescriptorHandleForHeapStart());
+            currentFaceHeapRTVHandle.Offset(faceIndex, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+
+
+            commandList->OMSetRenderTargets(1, &currentFaceHeapRTVHandle, false, nullptr);
 
             //float reflective_clear_color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            commandList->ClearRenderTargetView(reflectiveMapHeapRTV->GetCPUDescriptorHandleForHeapStart(), clear_color, 0, nullptr);
+            commandList->ClearRenderTargetView(currentFaceHeapRTVHandle, clear_color, 0, nullptr);
 
 
             CD3DX12_GPU_DESCRIPTOR_HANDLE checkboardGPUHandle(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
@@ -1374,10 +1591,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             commandList->SetGraphicsRootDescriptorTable(1, checkboardGPUHandle);
             
 
-            // Draw #1 - Quad
+
+            //cbvIndex++;
+            //commandList->SetPipelineState(skyboxPipelineState);
+            //commandList->SetGraphicsRootDescriptorTable(5, skyboxTextureGPUHandle);
+            //commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+            //update_reflective_scene(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(500.0f, 500.0f, 500.0f), XMFLOAT3(0.0, 0.5f, 0.0f), lookDirections[faceIndex], upVectors[faceIndex]);
+            //
+            ////update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(500.0f, 500.0f, 500.0f));
+            //CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
+            //commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
+            //commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
             
             cbvIndex++;
-            update_reflective_scene(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f), XMFLOAT3(-3.5f, 0.5f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f));
+            // Draw #1 - Quad
+            update_reflective_scene(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f), XMFLOAT3(0.0, 0.5f, 0.0f), lookDirections[faceIndex], upVectors[faceIndex]);
             CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
             commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
@@ -1385,23 +1613,51 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             checkboardGPUHandle.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
             commandList->SetGraphicsRootDescriptorTable(1, checkboardGPUHandle);
 
+            CD3DX12_GPU_DESCRIPTOR_HANDLE stoneGPUHandle(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+            stoneGPUHandle.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+
+
+            CD3DX12_GPU_DESCRIPTOR_HANDLE stoneTextureGPUHandle(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+            stoneTextureGPUHandle.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+            commandList->SetGraphicsRootDescriptorTable(1, stoneTextureGPUHandle);
+
             // Draw Call #2 - Cube
+
+            commandList->OMSetStencilRef(1);
             cbvIndex++;
             commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-            update_reflective_scene(XMFLOAT3(-1.0f, 2.0f, 0.0f), +angle, XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(-3.5f, 0.5f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f));
+            update_reflective_scene(XMFLOAT3(-1.0f, 2.0f, 0.0f), +angle, XMFLOAT3(7.0f, 1.0f, 7.0f), XMFLOAT3(0.0, 0.5f, 0.0f), lookDirections[faceIndex], upVectors[faceIndex]);
             CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
             commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
+
 
             // Draw Call #3 - Cube
             cbvIndex++;
             commandList->OMSetStencilRef(2);
             commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-            update_reflective_scene(XMFLOAT3(+1.0f, 2.0f, 0.0f), -angle, XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(-3.5f, 0.5f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f));
+            update_reflective_scene(XMFLOAT3(1.0f, 2.0f, 0.0f), -angle, XMFLOAT3(7.0f, 1.0f, 7.0f), XMFLOAT3(0.0, 0.5f, 0.0f), lookDirections[faceIndex], upVectors[faceIndex]);
             CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
             commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
             commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
+
         }
+
+        //cbvIndex++;
+        //commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+        //update_reflective_scene(XMFLOAT3(-1.0f, 2.0f, 0.0f), +angle, XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(0.0, 0.5f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f));
+        //CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
+        //commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
+        //commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
+
+        // Draw Call #3 - Cube
+        //cbvIndex++;
+        //commandList->OMSetStencilRef(2);
+        //commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+        //update_reflective_scene(XMFLOAT3(+1.0f, 2.0f, 0.0f), -angle, XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(0.0, 0.5f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f));
+        //CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
+        //commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
+        //commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
         
         commandList->SetGraphicsRootDescriptorTable(1, textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
         
@@ -1435,12 +1691,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         commandList->IASetVertexBuffers(0, 1, &quad_vertex_buffer_view);
         commandList->IASetIndexBuffer(&quad_index_buffer_view);
         
+
+        cBuffer.schilickFresenel = 0.5f;
         cbvIndex++;
         update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(7.0f, 1.0f, 7.0f));
         CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
         commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
         commandList->DrawIndexedInstanced(_countof(quad_indicies_y), 1, 0, 0, 0);
 
+        cBuffer.schilickFresenel = 0.0f;
+
+        // Draw Call #6 - Skybox
+        cbvIndex++;
+        commandList->SetPipelineState(skyboxPipelineState);
+        commandList->SetGraphicsRootDescriptorTable(5, skyboxTextureGPUHandle);
+        commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
+        update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(500.0f, 500.0f, 500.0f));
+        CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
+        commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
+        commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
+
+        cBuffer.schilickFresenel = 0.0f;
 
         commandList->SetPipelineState(opaquePipelineStateStencilOn);
 
@@ -1471,6 +1742,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
         // Draw Call #4 - Reflective Object
         commandList->SetPipelineState(reflectObjectPipelineState);
+        cBuffer.schilickFresenel = 0.6f;
 
         CD3DX12_GPU_DESCRIPTOR_HANDLE reflectiveGPUHandleSRV(textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
         reflectiveGPUHandleSRV.Offset(4, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
@@ -1481,13 +1753,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         iceGPUHandleSRV.Offset(2, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
         commandList->SetGraphicsRootDescriptorTable(1, iceGPUHandleSRV);
         
+        // Draw Dynamic Cube
         cbvIndex++;
         commandList->IASetVertexBuffers(0, 1, &cube_vertex_buffer_view);
-        update_shadow_object(XMFLOAT3(-3.5f, 0.5f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
+        update_shadow_object(XMFLOAT3(0.0, 0.5f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
         CopyMemory(pCBVBytes[cbvIndex], &cBuffer, sizeof(cBuffer));
         commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
         commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
+        // For testing:
 
+        cBuffer.schilickFresenel = 0.0f;
+        
         // -----------------------------------------------------------------
         // Draw Outlines
         commandList->SetPipelineState(outlineStencilPSOState);
@@ -1521,6 +1797,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         commandList->SetGraphicsRootConstantBufferView(0, pCBVResource[cbvIndex]->GetGPUVirtualAddress());
         commandList->DrawInstanced(_countof(cube_verticies), 1, 0, 0);
 
+       
+
+        
+
+
+
 
         // ------------------------------------------------------ Draw Quad --------------------------------------------------------
 
@@ -1535,6 +1817,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         commandList->RSSetScissorRects(1, &scissorsRect);
         commandList->RSSetViewports(1, &debugViewPort);
     
+        // Set reflection texture
+        //commandList->SetGraphicsRootDescriptorTable(3, reflectiveGPUHandleSRV);
+
         // Draw the quad that's used to show the shadow map
         cbvIndex++;
         update_world_matrix(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.0f, XMFLOAT3(1.0f, 1.0f, 1.0f));
